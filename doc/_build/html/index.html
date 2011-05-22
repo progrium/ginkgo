@@ -1,0 +1,260 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Introduction &mdash; gevent-tools v0.1 documentation</title>
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="gevent-tools v0.1 documentation" href="#" />
+    <link rel="next" title="Service component" href="service.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="service.html" title="Service component"
+             accesskey="N">next</a> |</li>
+        <li><a href="#">gevent-tools v0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="introduction">
+<h1>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h1>
+<p>gevent-tools is a collection of mini-libraries and utilities built on gevent for building gevent applications. There are currently three modules:</p>
+<ul class="simple">
+<li><tt class="xref py py-mod docutils literal"><span class="pre">service</span></tt> Provides a base class for implementing services, which are a nice way to organize large gevent applications. Services contain greenlets and other services, and provide a good foundation to build the components of any application.</li>
+<li><tt class="xref py py-mod docutils literal"><span class="pre">cluster</span></tt> A distributed roster manager for clusters for building distributed apps that need to know other hosts available in the cluster.</li>
+<li><tt class="xref py py-mod docutils literal"><span class="pre">util</span></tt> A couple of utility methods for building network applications in gevent</li>
+</ul>
+</div>
+<div class="section" id="using-services">
+<h1>Using services<a class="headerlink" href="#using-services" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="gevent_tools.service.Service">
+<em class="property">class </em><tt class="descclassname">gevent_tools.service.</tt><tt class="descname">Service</tt><a class="reference internal" href="_modules/gevent_tools/service.html#Service"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gevent_tools.service.Service" title="Permalink to this definition">¶</a></dt>
+<dd><p>Service base class for creating standalone or composable services</p>
+<p>A service is a container for two things: other services and greenlets. It
+then provides a common interface for starting and stopping them, based on
+a subset of the gevent.baseserver interface. This way you can include
+StreamServer or WSGIServer as child services.</p>
+<p>Service also lets you catch exceptions in the greenlets started from this
+service and introduces the concept of <cite>ready</cite>, letting us block <tt class="xref py py-meth docutils literal"><span class="pre">start()</span></tt>
+until the service is actually ready.</p>
+<dl class="attribute">
+<dt id="Service.started">
+<tt class="descname">started</tt><a class="headerlink" href="#Service.started" title="Permalink to this definition">¶</a></dt>
+<dd><p>This property returns whether this service has been started</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="gevent_tools.service.Service.ready">
+<tt class="descname">ready</tt><a class="reference internal" href="_modules/gevent_tools/service.html#Service.ready"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gevent_tools.service.Service.ready" title="Permalink to this definition">¶</a></dt>
+<dd><p>This property returns whether this service is ready for business</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="gevent_tools.service.Service._ready">
+<tt class="descname">_ready</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/gevent_tools/service.html#Service._ready"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gevent_tools.service.Service._ready" title="Permalink to this definition">¶</a></dt>
+<dd><p>Internal convenience function to proclaim readiness</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="gevent_tools.service.Service.add_service">
+<tt class="descname">add_service</tt><big>(</big><em>service</em><big>)</big><a class="reference internal" href="_modules/gevent_tools/service.html#Service.add_service"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gevent_tools.service.Service.add_service" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a child service to this service</p>
+<p>The service added will be started when this service starts, before 
+its <tt class="xref py py-meth docutils literal"><span class="pre">_start()</span></tt> method is called. It will also be stopped when this 
+service stops, before its <tt class="xref py py-meth docutils literal"><span class="pre">_stop()</span></tt> method is called.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="gevent_tools.service.Service.remove_service">
+<tt class="descname">remove_service</tt><big>(</big><em>service</em><big>)</big><a class="reference internal" href="_modules/gevent_tools/service.html#Service.remove_service"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gevent_tools.service.Service.remove_service" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove a child service from this service</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="gevent_tools.service.Service._start">
+<tt class="descname">_start</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/gevent_tools/service.html#Service._start"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gevent_tools.service.Service._start" title="Permalink to this definition">¶</a></dt>
+<dd><p>Empty implementation of service start. Implement me!</p>
+<p>Return <cite>service.READY</cite> or starting will block until <tt class="xref py py-meth docutils literal"><span class="pre">_ready()</span></tt> is
+called (or <cite>ready_timeout</cite> is reached).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="gevent_tools.service.Service._stop">
+<tt class="descname">_stop</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/gevent_tools/service.html#Service._stop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gevent_tools.service.Service._stop" title="Permalink to this definition">¶</a></dt>
+<dd><p>Empty implementation of service start. Implement me!</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="gevent_tools.service.Service.start">
+<tt class="descname">start</tt><big>(</big><em>block_until_ready=True</em><big>)</big><a class="reference internal" href="_modules/gevent_tools/service.html#Service.start"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gevent_tools.service.Service.start" title="Permalink to this definition">¶</a></dt>
+<dd><p>Public interface for starting this service and children. By default it blocks until ready.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="gevent_tools.service.Service.stop">
+<tt class="descname">stop</tt><big>(</big><em>timeout=None</em><big>)</big><a class="reference internal" href="_modules/gevent_tools/service.html#Service.stop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gevent_tools.service.Service.stop" title="Permalink to this definition">¶</a></dt>
+<dd><p>Stop this service and child services</p>
+<p>If the server uses a pool to spawn the requests, then <tt class="xref py py-meth docutils literal"><span class="pre">stop()</span></tt> also waits
+for all the handlers to exit. If there are still handlers executing after <em>timeout</em>
+has expired (default 1 second), then the currently running handlers in the pool are killed.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="gevent_tools.service.Service.serve_forever">
+<tt class="descname">serve_forever</tt><big>(</big><em>stop_timeout=None</em><big>)</big><a class="reference internal" href="_modules/gevent_tools/service.html#Service.serve_forever"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gevent_tools.service.Service.serve_forever" title="Permalink to this definition">¶</a></dt>
+<dd><p>Start the service if it hasn&#8217;t been already started and wait until it&#8217;s stopped.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="gevent_tools.service.Service.spawn">
+<tt class="descname">spawn</tt><big>(</big><em>func</em>, <em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/gevent_tools/service.html#Service.spawn"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gevent_tools.service.Service.spawn" title="Permalink to this definition">¶</a></dt>
+<dd><p>Spawn a greenlet under this service</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="gevent_tools.service.Service.spawn_later">
+<tt class="descname">spawn_later</tt><big>(</big><em>seconds</em>, <em>func</em>, <em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/gevent_tools/service.html#Service.spawn_later"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gevent_tools.service.Service.spawn_later" title="Permalink to this definition">¶</a></dt>
+<dd><p>Spawn a greenlet in the future under this service</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="gevent_tools.service.Service.catch">
+<tt class="descname">catch</tt><big>(</big><em>type</em>, <em>handler</em><big>)</big><a class="reference internal" href="_modules/gevent_tools/service.html#Service.catch"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gevent_tools.service.Service.catch" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set an error handler for exceptions of <cite>type</cite> raised in greenlets</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-gevent_tools.util">
+<span id="utils"></span><h1>Utils<a class="headerlink" href="#module-gevent_tools.util" title="Permalink to this headline">¶</a></h1>
+<p>Utility module</p>
+<p>Some useful gevent functions.</p>
+<dl class="function">
+<dt id="gevent_tools.util.connect_and_retry">
+<tt class="descclassname">gevent_tools.util.</tt><tt class="descname">connect_and_retry</tt><big>(</big><em>address</em>, <em>source_address=None</em>, <em>max_retries=None</em>, <em>delay=1.0</em>, <em>max_delay=3600</em><big>)</big><a class="reference internal" href="_modules/gevent_tools/util.html#connect_and_retry"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gevent_tools.util.connect_and_retry" title="Permalink to this definition">¶</a></dt>
+<dd><p>Connect and retry based on Twisted&#8217;s ReconnectingClientFactory</p>
+<p>Wraps <cite>gevent.socket.create_connection</cite> with a loop for max_retries (if 
+given) using delay and max_delay (and several magic constants) to do a
+linear backoff with builtin jitter to avoid stampede.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="gevent_tools.util.line_protocol">
+<tt class="descclassname">gevent_tools.util.</tt><tt class="descname">line_protocol</tt><big>(</big><em>socket_or_file</em>, <em>strip=True</em><big>)</big><a class="reference internal" href="_modules/gevent_tools/util.html#line_protocol"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gevent_tools.util.line_protocol" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generator for looping line-based protocol</p>
+<p>Takes a socket or file-from-socket and yields on every line. Disconnecting
+or connection errors will end the loop.</p>
+</dd></dl>
+
+<p>Contents:</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="service.html">Service component</a></li>
+<li class="toctree-l1"><a class="reference internal" href="util.html">Util module</a></li>
+</ul>
+</div>
+</div>
+<div class="section" id="indices-and-tables">
+<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
+<ul class="simple">
+<li><a class="reference internal" href="genindex.html"><em>Index</em></a></li>
+<li><a class="reference internal" href="py-modindex.html"><em>Module Index</em></a></li>
+<li><a class="reference internal" href="search.html"><em>Search Page</em></a></li>
+</ul>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="#">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Introduction</a></li>
+<li><a class="reference internal" href="#using-services">Using services</a></li>
+<li><a class="reference internal" href="#module-gevent_tools.util">Utils</a><ul>
+</ul>
+</li>
+<li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>
+</ul>
+
+  <h4>Next topic</h4>
+  <p class="topless"><a href="service.html"
+                        title="next chapter">Service component</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/index.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="service.html" title="Service component"
+             >next</a> |</li>
+        <li><a href="#">gevent-tools v0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Jeff Lindsay.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+    </div>
+  </body>
+</html>

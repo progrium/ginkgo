@@ -1,0 +1,140 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>gevent_tools.util &mdash; gevent-tools v0.1 documentation</title>
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="gevent-tools v0.1 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">gevent-tools v0.1 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for gevent_tools.util</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;Utility module</span>
+
+<span class="sd">Some useful gevent functions.</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">random</span>
+
+<span class="kn">import</span> <span class="nn">gevent.socket</span>
+
+<div class="viewcode-block" id="line_protocol"><a class="viewcode-back" href="../../index.html#gevent_tools.util.line_protocol">[docs]</a><span class="k">def</span> <span class="nf">line_protocol</span><span class="p">(</span><span class="n">socket_or_file</span><span class="p">,</span> <span class="n">strip</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Generator for looping line-based protocol</span>
+<span class="sd">    </span>
+<span class="sd">    Takes a socket or file-from-socket and yields on every line. Disconnecting</span>
+<span class="sd">    or connection errors will end the loop.</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">socket_or_file</span><span class="p">,</span> <span class="s">&#39;makefile&#39;</span><span class="p">):</span>
+        <span class="n">fileobj</span> <span class="o">=</span> <span class="n">socket_or_file</span><span class="o">.</span><span class="n">makefile</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">fileobj</span> <span class="o">=</span> <span class="n">socket_or_file</span>
+    <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">line</span> <span class="o">=</span> <span class="n">fileobj</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span> <span class="c"># returns None on EOF</span>
+            <span class="k">if</span> <span class="n">line</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span> <span class="n">strip</span><span class="p">:</span>
+                <span class="n">line</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="k">except</span> <span class="ne">IOError</span><span class="p">:</span>
+            <span class="n">line</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="k">if</span> <span class="n">line</span><span class="p">:</span>
+            <span class="k">yield</span> <span class="n">line</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">break</span>
+</div>
+<div class="viewcode-block" id="connect_and_retry"><a class="viewcode-back" href="../../index.html#gevent_tools.util.connect_and_retry">[docs]</a><span class="k">def</span> <span class="nf">connect_and_retry</span><span class="p">(</span><span class="n">address</span><span class="p">,</span> <span class="n">source_address</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">max_retries</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">delay</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">max_delay</span><span class="o">=</span><span class="mi">3600</span><span class="p">):</span>
+    <span class="n">factor</span> <span class="o">=</span> <span class="mf">2.7182818284590451</span> <span class="c"># (math.e)</span>
+    <span class="n">jitter</span> <span class="o">=</span> <span class="mf">0.11962656472</span> <span class="c"># molar Planck constant times c, joule meter/mole</span>
+    <span class="n">retries</span> <span class="o">=</span> <span class="mi">0</span>
+    
+    <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">gevent</span><span class="o">.</span><span class="n">socket</span><span class="o">.</span><span class="n">create_connection</span><span class="p">(</span><span class="n">address</span><span class="p">,</span> <span class="n">source_address</span><span class="o">=</span><span class="n">source_address</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">IOError</span><span class="p">:</span>
+            <span class="n">retries</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">if</span> <span class="n">max_retries</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span> <span class="n">retries</span> <span class="o">&gt;</span> <span class="n">max_retries</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s">&quot;Unable to connect after </span><span class="si">%s</span><span class="s"> retries&quot;</span> <span class="o">%</span> <span class="n">max_retries</span><span class="p">)</span>
+            <span class="n">delay</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">delay</span> <span class="o">*</span> <span class="n">factor</span><span class="p">,</span> <span class="n">max_delay</span><span class="p">)</span>
+            <span class="n">delay</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">normalvariate</span><span class="p">(</span><span class="n">delay</span><span class="p">,</span> <span class="n">delay</span> <span class="o">*</span> <span class="n">jitter</span><span class="p">)</span>
+            <span class="n">gevent</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">delay</span><span class="p">)</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">gevent-tools v0.1 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Jeff Lindsay.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+    </div>
+  </body>
+</html>
