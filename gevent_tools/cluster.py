@@ -99,11 +99,10 @@ class PeerServer(service.Service):
         
         self.add_service(self.server)
     
-    def _start(self):
+    def do_start(self):
         if self.manager.is_leader:
             self.manager.cluster.add(self.address[0])
             self.manager.trigger_callback()
-        return service.READY
     
     def handle(self, socket, address):
         """
@@ -179,8 +178,9 @@ class PeerClient(service.Service):
         self._delay = None
         self._max_delay = None
     
-    def _start(self):
+    def do_start(self):
         self.spawn(self.connect)
+        return service.NOT_READY
 
     def connect(self):
         while True:
@@ -196,7 +196,7 @@ class PeerClient(service.Service):
             self.handle(socket)
     
     def handle(self, socket):
-        self._ready()
+        self.set_ready()
         self.logger.debug("Connected to leader")
         client_address = self.client_hostname or socket.getsockname()[0]
         socket.send('%s\n' % client_address)

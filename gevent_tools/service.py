@@ -4,7 +4,7 @@ import gevent.event
 import gevent.pool
 import gevent.util
 
-READY = True
+NOT_READY = 1
 
 class Service(object):
     """Service base class for creating standalone or composable services
@@ -35,7 +35,7 @@ class Service(object):
         """This property returns whether this service is ready for business"""
         return self._ready_event.isSet()
     
-    def _ready(self):
+    def set_ready(self):
         """Internal convenience function to proclaim readiness"""
         self._ready_event.set()
     
@@ -102,24 +102,24 @@ class Service(object):
                     child.start(block_until_ready)
                 elif isinstance(child, gevent.baseserver.BaseServer):
                     child.start()
-            ready = self._start()
-            if ready:
-                self._ready_event.set()
-            elif not ready and block_until_ready is True:
+            ready = self.do_start()
+            if ready == NOT_READY and block_until_ready is True:
                 self._ready_event.wait(self.ready_timeout)
+            elif ready != NOT_READY:
+                self._ready_event.set()
             self.started = True
         except:
             self.stop()
             raise
     
-    def _start(self):
+    def do_start(self):
         """Empty implementation of service start. Implement me!
         
-        Return `service.READY` or starting will block until :meth:`_ready` is
+        Return `service.NOT_READY` to block until :meth:`_ready` is
         called (or `ready_timeout` is reached).
         
         """
-        return READY
+        return
     
     def stop(self, timeout=None):
         """Stop this service and child services
@@ -133,7 +133,7 @@ class Service(object):
         try:
             for child in self._children:
                 child.stop()
-            self._stop()
+            self.do_stop()
         finally:
             if timeout is None:
                 timeout = self.stop_timeout
@@ -143,7 +143,7 @@ class Service(object):
             self._ready_event.clear()
             self._stopped_event.set()
     
-    def _stop(self):
+    def do_stop(self):
         """Empty implementation of service start. Implement me!"""
         return
     

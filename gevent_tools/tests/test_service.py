@@ -4,12 +4,13 @@ import nose.tools
 from gevent_tools import service
 
 class SlowReadyService(service.Service):
-    def _start(self):
+    def do_start(self):
         self.spawn(self._run)
+        return service.NOT_READY
     
     def _run(self):
         gevent.sleep(0.5)
-        self._ready()
+        self.set_ready()
 
 class ParentService(service.Service):
     def __init__(self):
@@ -46,7 +47,7 @@ def test_slow_ready_service():
 
 def test_exception_on_start_stops_service():
     class ErroringService(ParentService):
-        def _start(self):
+        def do_start(self):
             raise Exception("Error")
     
     s = ErroringService()
@@ -65,15 +66,16 @@ def test_greenlet_exception_catching_service():
             self.raised = False
             self.catch(IOError, self.handle_error)
             
-        def _start(self):
+        def do_start(self):
             self.spawn(self.run)
+            return service.NOT_READY
         
         def handle_error(self, error, greenlet):
             self.raised = True
             raise NotImplementedError("Second Error")
         
         def run(self):
-            self._ready()
+            self.set_ready()
             raise IOError("First Error")
         
     s = GreenletExceptionService()
@@ -86,9 +88,8 @@ def test_greenlet_exception_catching_service():
 
 def test_service_serves_forever():
     class StoppingService(service.Service):
-        def _start(self):
+        def do_start(self):
             self.spawn(self._run)
-            return service.READY
 
         def _run(self):
             gevent.sleep(0.5)
@@ -122,11 +123,10 @@ def test_removed_child_service_still_runs():
 
 def test_service_greenlets():
     class GreenletService(service.Service):
-        def _start(self):
+        def do_start(self):
             for n in xrange(3):
                 self.spawn(self._run, n)
             self.spawn_later(1, self._run, 0)
-            return service.READY
 
         def _run(self, index):
             while True:

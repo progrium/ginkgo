@@ -34,7 +34,7 @@ setup(
     description='gevent related goodies',
     packages=['gevent_tools'],
     scripts=['scripts/serviced'],
-    install_requires=['gevent', 'setproctitle', 'nose'],
+    install_requires=['gevent', 'setproctitle', 'nose', 'python-daemon'],
     data_files=[],
     cmdclass={
         'test': TestCommand,
