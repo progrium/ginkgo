@@ -86,7 +86,7 @@ class Runner(DaemonRunner):
         if self.options.name:
             setproctitle.setproctitle(self.options.name)
         self.service = self.options.service()
-        self.service.catch(SystemExit, lambda e,g: None)
+        self.service.catch(SystemExit, lambda e,g: self.service.stop())
         self.service.serve_forever()
 
     def _open(self, *args, **kwargs):

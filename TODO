@@ -1,5 +1,5 @@
 -better documentation
 -runner.py
     -logger output management
-    -no deamonize mode
-    -signal handlers
+    -implement -X flag
+    -signal handlers?

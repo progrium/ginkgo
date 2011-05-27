@@ -144,7 +144,7 @@ class Service(object):
             self._stopped_event.set()
     
     def do_stop(self):
-        """Empty implementation of service start. Implement me!"""
+        """Empty implementation of service stop. Implement me!"""
         return
     
     def serve_forever(self, stop_timeout=None):
