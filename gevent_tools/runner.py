@@ -1,20 +1,19 @@
+import optparse
 import os.path
 import sys
 import time
-from optparse import OptionParser
 
 import setproctitle
+import daemon
+import daemon.runner
 
-from daemon import DaemonContext
-from daemon.runner import DaemonRunner
-from daemon.runner import make_pidlockfile
 
-class Runner(DaemonRunner):
+class Runner(daemon.runner.DaemonRunner):
     _args = sys.argv[1:]
     _opener = open
     
     def __init__(self):
-        parser = OptionParser()
+        parser = optparse.OptionParser()
         parser.add_option("-n", "--nodaemon", dest="daemonize", default=True, action="store_false",
                         help="Don't daemonize (stay in foreground)")
         parser.add_option("-C", "--config", dest="config", metavar="<file>",
@@ -42,7 +41,7 @@ class Runner(DaemonRunner):
         
         self.parse_args()
         self.app = self
-        self.daemon_context = DaemonContext()
+        self.daemon_context = daemon.DaemonContext()
         self.daemon_context.stdin = self._open(self.stdin_path, 'r')
         self.daemon_context.stdout = self._open(self.stdout_path, 'w+')
         self.daemon_context.stderr = self._open(
@@ -50,7 +49,7 @@ class Runner(DaemonRunner):
 
         self.pidfile = None
         if self.pidfile_path is not None:
-            self.pidfile = make_pidlockfile(
+            self.pidfile = daemon.runner.make_pidlockfile(
                 self.pidfile_path, self.pidfile_timeout)
         self.daemon_context.pidfile = self.pidfile
     

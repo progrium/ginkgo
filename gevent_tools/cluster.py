@@ -17,33 +17,6 @@ by taking the remaining node list, sorting it, and picking the first node. If
 a node happens to get a different leader, as long as it is in the cluster, it
 will be redirected to the right leader. 
 
-To try it out on one machine, you need to make several more loopback interfaces:
-
-In OSX:
- ifconfig lo0 inet 127.0.0.2 add
- ifconfig lo0 inet 127.0.0.3 add
- ifconfig lo0 inet 127.0.0.4 add
-
-In Linux:
- ifconfig lo:2 127.0.0.2 up
- ifconfig lo:3 127.0.0.3 up
- ifconfig lo:4 127.0.0.4 up
- 
-Now you can start the first node on 127.0.0.1:
- INTERFACE=127.0.0.1 python cluster.py
-
-The first argument is the leader, the second is the interface to bind to.
- 
-Start the others pointing to 127.0.0.1:
- INTERFACE=127.0.0.2 LEADER=127.0.0.1 python cluster.py
- INTERFACE=127.0.0.3 LEADER=127.0.0.1 python cluster.py
-
-Try starting the last one pointing to a non-leader:
- INTERFACE=127.0.0.4 LEADER=127.0.0.3 python cluster.py
-
-Now you can kill any node (including the leader) and bring up another node 
-pointing to any other node, and they all get updated immediately.
-
 """
 import gevent.monkey; gevent.monkey.patch_all(thread=False)
 
