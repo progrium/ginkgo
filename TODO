@@ -3,6 +3,3 @@
     -logger output management
     -no deamonize mode
     -signal handlers
--service.py
-    -switch to default ready _start() implementation
-    -find better names for implementing start/stop than internal function names
