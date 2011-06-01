@@ -7,6 +7,8 @@ import setproctitle
 import daemon
 import daemon.runner
 
+def main():
+    Runner().do_action()
 
 class Runner(daemon.runner.DaemonRunner):
     _args = sys.argv[1:]

@@ -33,9 +33,11 @@ setup(
     author_email='jeff.lindsay@twilio.com',
     description='gevent related goodies',
     packages=['gevent_tools'],
-    scripts=['scripts/serviced'],
     install_requires=['gevent', 'setproctitle', 'nose', 'python-daemon'],
     data_files=[],
+    entry_points={
+        'console_scripts': [
+            'serviced = gevent_tools.runner:main',]},
     cmdclass={
         'test': TestCommand,
         'coverage': CoverageCommand,}
