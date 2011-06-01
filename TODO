@@ -3,3 +3,41 @@
     -logger output management
     -implement -X flag
     -signal handlers?
+
+
+-configuration service
+    -doozer backend
+    -zookeeper backend
+-zeromq service / decorators
+-msgbus replacement
+-jmeter/ab tool
+
+
+request
+request count
+concurrent requests
+
+node
+ -use from web ui
+ -use as remote service
+ -connects to others as peer / distributes work
+ -"listen" role: long lived connections, "message" counting
+ 
+configuration.set(globals())
+config = configuration.get('something')
+shared_config = configuration.get('shared')
+
+set_config(globals())
+config = get_config('zmq')
+
+
+s = ZMQClient('this.service')
+
+class SomeService(ZMQService('this.service')):
+
+    def push(self, blah):
+        pass
+
+prefix/this.service => REP
+        /host1
+        /host2

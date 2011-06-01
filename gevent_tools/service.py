@@ -97,6 +97,7 @@ class Service(object):
         self._stopped_event.clear()
         self._ready_event.clear()
         try:
+            self.pre_start()
             for child in self._children:
                 if isinstance(child, Service):
                     child.start(block_until_ready)
@@ -108,14 +109,21 @@ class Service(object):
             elif ready != NOT_READY:
                 self._ready_event.set()
             self.started = True
+            self.post_start()
         except:
             self.stop()
             raise
     
+    def pre_start(self):
+        pass
+    
+    def post_start(self):
+        pass
+    
     def do_start(self):
         """Empty implementation of service start. Implement me!
         
-        Return `service.NOT_READY` to block until :meth:`_ready` is
+        Return `service.NOT_READY` to block until :meth:`set_ready` is
         called (or `ready_timeout` is reached).
         
         """
@@ -131,6 +139,7 @@ class Service(object):
             return gevent.spawn(self.stop)
         self.started = False
         try:
+            self.pre_stop()
             for child in self._children:
                 child.stop()
             self.do_stop()
@@ -142,6 +151,13 @@ class Service(object):
                 self._greenlets.kill(block=True, timeout=1)
             self._ready_event.clear()
             self._stopped_event.set()
+            self.post_stop()
+    
+    def pre_stop(self):
+        pass
+    
+    def post_stop(self):
+        pass
     
     def do_stop(self):
         """Empty implementation of service stop. Implement me!"""
