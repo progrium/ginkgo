@@ -6,7 +6,7 @@ import gevent.event
 import gevent.socket
 import nose.tools
 
-from gevent_tools import cluster
+from gevent_tools.toys import cluster
 
 port = 6000
 

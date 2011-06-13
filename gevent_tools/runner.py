@@ -8,6 +8,7 @@ import daemon
 import daemon.runner
 
 def main():
+    """Entry point for serviced console script"""
     Runner().do_action()
 
 class Runner(daemon.runner.DaemonRunner):

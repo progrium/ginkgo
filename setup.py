@@ -33,7 +33,7 @@ setup(
     author_email='jeff.lindsay@twilio.com',
     description='gevent related goodies',
     packages=['gevent_tools'],
-    install_requires=['gevent', 'setproctitle', 'nose', 'python-daemon'],
+    install_requires=['gevent', 'setproctitle', 'nose', 'python-daemon',],
     data_files=[],
     entry_points={
         'console_scripts': [
