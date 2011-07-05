@@ -8,6 +8,19 @@ import random
 
 import gevent.socket
 
+from gevent_tools.service import Service
+
+class ServiceWrapper(Service):
+    def __init__(self, klass, *args, **kwargs):
+        super(ServiceWrapper, self).__init__()
+        self.wrapped = klass(*args, **kwargs)
+    
+    def do_start(self):
+        self.spawn(self.wrapped.start)
+    
+    def do_stop(self):
+        self.wrapped.stop()
+
 def line_protocol(socket_or_file, strip=True):
     """Generator for looping line-based protocol
     
