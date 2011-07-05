@@ -1,2 +1,4 @@
 gevent_tools.egg-info
+*.log
+*.pid
 .coverage
