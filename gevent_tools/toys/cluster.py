@@ -28,8 +28,8 @@ import gevent
 import gevent.server
 import gevent.socket
 
-import util
-import service
+from gevent_tools import util
+from gevent_tools import service
 
 CLIENT_TIMEOUT_SECONDS = 10
 SERVER_KEEPALIVE_SECONDS = 5
