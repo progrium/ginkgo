@@ -86,7 +86,6 @@ class Runner(daemon.runner.DaemonRunner):
         
         def load_file(filename):
             f = self._open(filename, 'r')
-            print f
             d = {'__file__': filename}
             exec f.read() in d,d
             return d
