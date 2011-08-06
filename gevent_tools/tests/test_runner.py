@@ -98,3 +98,50 @@ def test_extend_file_config_option():
     with silencer():
         ConfigCheckRunner().do_action()
 
+
+def test_privileged_configuration():
+    from gevent_tools.runner import Runner
+    from gevent_tools import config
+
+    uids = {}
+
+    Runner._args = ['run', '-C', 'config', '-u', 'nobody']
+    Runner._opener = mock_open({"config": ""})
+
+    runner = Runner()
+
+    # mock out the os getuid/setuid modules
+    import os
+    props = {'uid': 0, 'gid': 0}
+    def getuid(): return props['uid']
+    def setuid(uid): props['uid'] = uid
+    def getgid(): return props['gid']
+    def setgid(gid): props['gid'] = gid
+
+    os.getuid = getuid
+    os.setuid = setuid
+    os.getgid = getgid
+    os.setgid = setgid
+
+    # capture the uid of the service at start and stop time
+    def service():
+        import gevent_tools.service
+        class Service(gevent_tools.service.Service):
+            def do_start(self):
+                uids['start'] = os.getuid()
+
+                def stop(): self.stop()
+                gevent.spawn_later(0.1, stop)
+            
+            def do_stop(self):
+                uids['stop'] = os.getuid()
+
+        return Service()
+
+    config.load({'service': service})
+
+    with silencer():
+        runner.do_action()
+    
+    assert uids['start'] != runner.uid
+    assert uids['stop'] == runner.uid
