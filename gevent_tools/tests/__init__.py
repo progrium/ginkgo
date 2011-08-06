@@ -14,8 +14,15 @@ class silencer:
         sys.stdout = self.old_stdout
         sys.stderr = self.old_stderr
     
-def mock_open(file_map, default=''):
+def mock_open(file_map, default=None):
     """Generates a function to replace `open` for testing file operations"""
+    file_map.update({"/dev/null": ""})
     def open_mock(*args, **kwargs):
-        return StringIO.StringIO(file_map.get(args[0], default))
+        path, mode = args[0:2]
+        contents = file_map.get(path, default)
+        if mode == 'r' and contents is None:
+            raise IOError("File not found: %s" % path)
+        elif mode == 'w':
+            contents = ""
+        return StringIO.StringIO(contents)
     return open_mock

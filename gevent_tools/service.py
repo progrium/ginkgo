@@ -163,6 +163,10 @@ class Service(object):
         """Empty implementation of service stop. Implement me!"""
         return
     
+    def do_reload(self):
+        """Empty implementation of service reload. Implement me!"""
+        pass
+
     def serve_forever(self, stop_timeout=None):
         """Start the service if it hasn't been already started and wait until it's stopped."""
         if not self.started:

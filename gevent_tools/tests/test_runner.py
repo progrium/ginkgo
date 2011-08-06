@@ -34,3 +34,67 @@ def test_runner_no_daemonize():
     EmptyRunner._opener = mock_open({"config": "", "serviced.log": "", "serviced.pid": ""})
     with silencer():
         EmptyRunner()
+
+
+def test_read_config_option():
+    from gevent_tools.runner import Runner
+    from gevent_tools.config import Option
+
+    class ConfigCheckRunner(Runner):
+        foo = Option('foo')
+        def run(self):
+            assert self.foo == 'bar'
+
+    ConfigCheckRunner._args = ['run', '-C', 'config']
+    ConfigCheckRunner._opener = mock_open({"config": "foo = 'bar'"})
+
+    with silencer():
+        ConfigCheckRunner().do_action()
+
+def test_command_line_override_config():
+    """ Test that specifying an option on the command line override any
+        value set in a config file"""
+    from gevent_tools.runner import Runner
+
+    class ConfigCheckRunner(Runner):
+        def run(self):
+            assert self.pidfile_path == 'mypidfile.pid'
+
+    ConfigCheckRunner._args = ['run', '-C', 'config', '-p', 'mypidfile.pid']
+    ConfigCheckRunner._opener = mock_open({"config": "pidfile = 'configpidfile.pid'"})
+
+    with silencer():
+        ConfigCheckRunner().do_action()
+
+
+def test_extend_file_config_option():
+    from gevent_tools.runner import Runner
+    from gevent_tools.config import Option
+
+    class ConfigCheckRunner(Runner):
+        foo = Option('foo')
+        def run(self):
+            assert self.foo == 'bar2'
+
+    ConfigCheckRunner._args = ['run', '-C', 'config1', '-X', 'config2']
+    ConfigCheckRunner._opener = mock_open({"config1": "foo = 'bar1'", 
+                                           "config2": "foo = 'bar2'"})
+
+    with silencer():
+        ConfigCheckRunner().do_action()
+
+def test_extend_file_config_option():
+    from gevent_tools.runner import Runner
+    from gevent_tools.config import Option
+
+    class ConfigCheckRunner(Runner):
+        foo = Option('foo')
+        def run(self):
+            assert self.foo == 'bar2'
+
+    ConfigCheckRunner._args = ['run', '-C', 'config1', '-X', "foo = 'bar2'"]
+    ConfigCheckRunner._opener = mock_open({"config1": "foo = 'bar1'"})
+
+    with silencer():
+        ConfigCheckRunner().do_action()
+
