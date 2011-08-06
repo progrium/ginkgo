@@ -139,7 +139,7 @@ class Runner(daemon.runner.DaemonRunner):
             self.gid = pw_record.pw_gid
     
     def _log_config(self):
-        if hasattr(self.log_config):
+        if self.log_config:
             logging.config.dictConfig(self.log_config)
             
     def do_reload(self):
@@ -164,16 +164,17 @@ class Runner(daemon.runner.DaemonRunner):
         if self.proc_name:
             setproctitle.setproctitle(self.proc_name)
 
-        # shed privileges
-        if self.uid and self.gid:
-            daemon.daemon.change_process_owner(self.uid, self.gid)
-
         self.service = self.service_factory()
 
         if hasattr(self.service, 'catch'):
             self.service.catch(SystemExit, lambda e,g: self.service.stop())
 
-        self.service.serve_forever()
+        def shed_privileges():
+            # shed privileges
+            if self.uid and self.gid:
+                daemon.daemon.change_process_owner(self.uid, self.gid)
+            
+        self.service.serve_forever(ready_callback = shed_privileges)
     
     def terminate(self):
         # XXX: multiple SIGTERM signals should forcibly quit the process
