@@ -8,6 +8,8 @@ import setproctitle
 import daemon
 import daemon.runner
 
+from gevent_tools import config
+
 def main():
     """Entry point for serviced console script"""
     Runner().do_action()
@@ -40,6 +42,12 @@ class Runner(daemon.runner.DaemonRunner):
     _args = sys.argv[1:]
     _opener = io.open
     
+    logfile_path = config.Option('logfile')
+    pidfile_path = config.Option('pidfile')
+    proc_name = config.Option('name')
+    
+    service_factory = config.Option('service')
+    
     def __init__(self):
         self.action_funcs = {
             'start': '_start',
@@ -49,7 +57,7 @@ class Runner(daemon.runner.DaemonRunner):
         self.service = None
         self.app = self
         
-        self.parse_args(*self.load_config(runner_options()))
+        self.parse_args(self.load_config(runner_options()))
         self.daemon_context = daemon.DaemonContext()
         self.daemon_context.stdin = self._open(self.stdin_path, 'r')
         self.daemon_context.stdout = self._open(
@@ -58,9 +66,9 @@ class Runner(daemon.runner.DaemonRunner):
             self.stderr_path, 'a+', buffering=1)
 
         self.pidfile = None
-        if self.pidfile_path is not None:
+        if self.pidfile_abspath is not None:
             self.pidfile = daemon.runner.make_pidlockfile(
-                self.pidfile_path, self.pidfile_timeout)
+                self.pidfile_abspath, self.pidfile_timeout)
         self.daemon_context.pidfile = self.pidfile
     
     def load_config(self, parser):
@@ -73,29 +81,30 @@ class Runner(daemon.runner.DaemonRunner):
         elif len(args) == 0 or args[0] in ['start', 'restart', 'run']:
             parser.error("a configuration file is required to start")
         # Now we parse args again with the config file settings as defaults
-        return parser.parse_args(self._args)
+        options, args = parser.parse_args(self._args)
+        config.load(options.__dict__)
+        return args
     
-    def parse_args(self, options, args):
-        self.options = options
+    def parse_args(self, args):
         try:
             self.action = args[0]
         except IndexError:
             self.action = 'run'
         
         self.stdin_path = '/dev/null'
-        self.stdout_path = options.logfile
-        self.stderr_path = options.logfile
+        self.stdout_path = self.logfile_path
+        self.stderr_path = self.logfile_path
         
-        self.pidfile_path = os.path.abspath(options.pidfile)
+        self.pidfile_abspath = os.path.abspath(self.pidfile_path)
         self.pidfile_timeout = 3
         
         if self.action not in self.action_funcs:
             self._usage_exit(args)
     
     def run(self):
-        if self.options.name:
-            setproctitle.setproctitle(self.options.name)
-        self.service = self.options.service()
+        if self.proc_name:
+            setproctitle.setproctitle(self.proc_name)
+        self.service = self.service_factory()
         if hasattr(self.service, 'catch'):
             self.service.catch(SystemExit, lambda e,g: self.service.stop())
         self.service.serve_forever()
