@@ -12,6 +12,8 @@ import daemon
 import daemon.daemon
 import daemon.runner
 
+from gevent_tools import config
+
 def main():
     """Entry point for serviced console script"""
     Runner().do_action()
@@ -44,17 +46,26 @@ class Runner(daemon.runner.DaemonRunner):
     _args = sys.argv[1:]
     _opener = io.open
     
+    logfile_path =      config.Option('logfile')
+    pidfile_path =      config.Option('pidfile')
+    proc_name =         config.Option('name')
+    service_factory =   config.Option('service')
+    chroot_path =       config.Option('chroot') 
+    user =              config.Option('user')
+    log_config =        config.Option('log_config')
+    
     def __init__(self):
         self.action_funcs = {
             'start': '_start',
             'stop': '_stop',
             'restart': '_restart',
-            'run': 'run',
-            'reload': 'reload', }
+            'run': '_run',
+            'reload': '_reload', }
+
         self.service = None
         self.app = self
         
-        self.parse_args(*self.load_config(runner_options()))
+        self.parse_args(self.load_config(runner_options()))
         self.daemon_context = daemon.DaemonContext()
         self.daemon_context.stdin = self._open(self.stdin_path, 'r')
         self.daemon_context.stdout = self._open(
@@ -63,17 +74,19 @@ class Runner(daemon.runner.DaemonRunner):
             self.stderr_path, 'a+', buffering=1)
 
         self.pidfile = None
-        if self.pidfile_path is not None:
+        if self.pidfile_abspath is not None:
             self.pidfile = daemon.runner.make_pidlockfile(
-                self.pidfile_path, self.pidfile_timeout)
+                self.pidfile_abspath, self.pidfile_timeout)
         self.daemon_context.pidfile = self.pidfile
         self.daemon_context.chroot_directory = self.chroot_path
     
     def load_config(self, parser):
         options, args = parser.parse_args(self._args)
+        self.config_path = options.config
         
         def load_file(filename):
             f = self._open(filename, 'r')
+            print f
             d = {'__file__': filename}
             exec f.read() in d,d
             return d
@@ -88,45 +101,47 @@ class Runner(daemon.runner.DaemonRunner):
                 parser.set_defaults(**load_file(ex))
             except IOError:
                 # couldn't open the file try to interpret as python
+                d = {}
                 exec ex in d,d
                 parser.set_defaults(**d)
 
         # Now we parse args again with the config file settings as defaults
-        return parser.parse_args(self._args)
+        options, args = parser.parse_args(self._args)
+        config.load(options.__dict__)
+        return args
     
-    def parse_args(self, options, args):
-        self.options = options
+    def parse_args(self, args):
         try:
             self.action = args[0]
         except IndexError:
             self.action = 'run'
         
         self.stdin_path = '/dev/null'
-        self.stdout_path = options.logfile
-        self.stderr_path = options.logfile
-        
-        self.pidfile_path = os.path.abspath(options.pidfile)
-        self.pidfile_timeout = 3
+        self.stdout_path = self.logfile_path
+        self.stderr_path = self.logfile_path
         
         def abspath(f):
             return os.path.abspath(f) if f is not None else None
 
-        self.config_path = abspath(options.config)
-        self.chroot_path = abspath(options.chroot)
+        self.pidfile_abspath = abspath(self.pidfile_path)
+        self.pidfile_timeout = 3
+        
+        self.config_abspath = abspath(self.config_path)
+        self.chroot_abspath = abspath(self.chroot_path)
 
         if self.action not in self.action_funcs:
             self._usage_exit(args)
 
         # convert user name into uid/gid pair
         self.uid = self.gid = None
-        if self.options.user is not None:
-            pw_record = pwd.getpwnam(self.options.user)
+        if self.user is not None:
+            pw_record = pwd.getpwnam(self.user)
             self.uid = pw_record.pw_uid
             self.gid = pw_record.pw_gid
     
     def _log_config(self):
-        if hasattr(self.options, "log_config"):
-            logging.config.dictConfig(self.options.log_config)
+        if hasattr(self.log_config):
+            logging.config.dictConfig(self.log_config)
             
     def do_reload(self):
         self._log_config()
@@ -138,7 +153,7 @@ class Runner(daemon.runner.DaemonRunner):
         gevent.signal(signal.SIGUSR1, self.do_reload)
         gevent.signal(signal.SIGTERM, self.terminate)
 
-        if self._get_action_func() == 'run':
+        if self._get_action_func() == '_run':
             # to make debugging easier, we're including the directory where
             # the configuration file lives as well as the current working
             # directory in the module search path
@@ -147,14 +162,15 @@ class Runner(daemon.runner.DaemonRunner):
 
         self._log_config()
 
-        if self.options.name:
-            setproctitle.setproctitle(self.options.name)
+        if self.proc_name:
+            setproctitle.setproctitle(self.proc_name)
 
         # shed privileges
         if self.uid and self.gid:
             daemon.daemon.change_process_owner(self.uid, self.gid)
 
-        self.service = self.options.service(self.options)
+        self.service = self.service_factory()
+
         if hasattr(self.service, 'catch'):
             self.service.catch(SystemExit, lambda e,g: self.service.stop())
 
@@ -164,9 +180,13 @@ class Runner(daemon.runner.DaemonRunner):
         # XXX: multiple SIGTERM signals should forcibly quit the process
         self.service.stop()
 
-    def reload(self):
+    def _reload(self):
         os.kill(self.pidfile.read_pid(), signal.SIGUSR1)
 
+    def _run(self):
+        print "Starting service..."
+        self.run()
+    
     def do_action(self):
         func = self._get_action_func()
         getattr(self, func)()

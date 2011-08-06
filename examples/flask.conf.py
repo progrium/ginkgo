@@ -1,6 +1,6 @@
 from flask import Flask
 app = Flask(__name__)
-port = 8088
+port = 8888
 
 @app.route("/")
 def hello():
@@ -8,5 +8,5 @@ def hello():
 
 def service():
     from gevent.wsgi import WSGIServer
-    from gevent_tools import ServiceWrapper
+    from gevent_tools.util import ServiceWrapper
     return ServiceWrapper(WSGIServer, ('', port), app)    
