@@ -45,7 +45,7 @@ class Runner(daemon.runner.DaemonRunner):
             'start': '_start',
             'stop': '_stop',
             'restart': '_restart',
-            'run': 'run', }
+            'run': '_run', }
         self.service = None
         self.app = self
         
@@ -99,6 +99,10 @@ class Runner(daemon.runner.DaemonRunner):
         if hasattr(self.service, 'catch'):
             self.service.catch(SystemExit, lambda e,g: self.service.stop())
         self.service.serve_forever()
+    
+    def _run(self):
+        print "Starting service..."
+        self.run()
     
     def do_action(self):
         func = self._get_action_func()
