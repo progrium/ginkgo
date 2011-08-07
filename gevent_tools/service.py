@@ -4,6 +4,8 @@ import gevent.event
 import gevent.pool
 import gevent.util
 
+from gevent_tools.util import ServiceWrapper
+
 NOT_READY = 1
 
 class Service(object):
@@ -47,6 +49,8 @@ class Service(object):
         service stops, before its :meth:`_stop` method is called.
         
         """
+        if isinstance(service, gevent.baseserver.BaseServer):
+            service = ServiceWrapper(service)
         self._children.add(service)
     
     def remove_service(self, service):
