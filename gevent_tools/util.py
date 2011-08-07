@@ -7,13 +7,17 @@ Some useful gevent functions.
 import random
 
 import gevent.socket
+import gevent.baseserver
 
 from gevent_tools.service import Service
 
 class ServiceWrapper(Service):
-    def __init__(self, klass, *args, **kwargs):
+    def __init__(self, klass_or_server, *args, **kwargs):
         super(ServiceWrapper, self).__init__()
-        self.wrapped = klass(*args, **kwargs)
+        if isinstance(klass_or_server, gevent.baseserver.BaseServer):
+            self.wrapped = klass_or_server
+        else:
+            self.wrapped = klass(*args, **kwargs)
     
     def do_start(self):
         self.spawn(self.wrapped.start)
