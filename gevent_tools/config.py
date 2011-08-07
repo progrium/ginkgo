@@ -40,33 +40,3 @@ class Option(object):
             self._last_value = self.value
         return has_changed
 
-
-if __name__ == '__main__':
-    load(dict(
-        FOO='bar',
-        baz='qux',
-        section1=dict(
-            foo='bar'),
-        section2=dict(
-            foo='bar',
-            SUBSECTION=dict(
-                baz='qux'))
-    ))
-    
-    class MyThing(object):
-        my_config = Option('section1.foo')
-    
-    m = MyThing()
-    print m.my_config
-    print changed(m, 'my_config')
-    load(dict(
-        section1=dict(
-            foo='zoop')))
-    print changed(m, 'my_config')
-    print changed(m, 'my_config')
-    print m.my_config
-    print changed(m, 'my_config')
-    assert m.my_config == 'bar'
-    assert MyThing.my_config == 'bar'
-    
-
