@@ -188,7 +188,7 @@ class MyApplication(Service):
         self.add_service(TcpClient(('127.0.0.1', 1234), self.client_connect))
     
     def client_connect(self, address):
-        sockfile = create_connection(('127.0.0.1', 1234)).makefile()
+        sockfile = create_connection(address).makefile()
         while True:
             line = sockfile.readline() # returns None on EOF
             if line is not None:
@@ -267,7 +267,7 @@ pidfile = 'example.pid'
 logfile = 'example.log'
 http_port = 8080
 tcp_port = 1234
-client_connect = ('127.0.0.1', 1234)
+connect_address = ('127.0.0.1', 1234)
 
 def service():
     from example import MyApplication
@@ -280,15 +280,15 @@ from gevent_tools.config import Option
 class MyApplication(Service):
     http_port = Option('http_port')
     tcp_port = Option('tcp_port')
-    client_connect = Option('client_connect')
+    connect_address = Option('connect_address')
     
     def __init__(self):
         super(MyApplication, self).__init__()
         
-        self.add_service(WSGIServer(self.http_port, self.handle_http))
-        self.add_service(StreamServer(self.tcp_port, self.handle_tcp))
-        self.add_service(TcpClient(('127.0.0.1', self.client_connect), self.client_connect))
+        self.add_service(WSGIServer(('127.0.0.1', self.http_port), self.handle_http))
+        self.add_service(StreamServer(('127.0.0.1', self.tcp_port), self.handle_tcp))
+        self.add_service(TcpClient(self.connect_address, self.client_connect))
 # ...
 
 #===
-# 12. Reload hooks
+# 12. Reload hooks?

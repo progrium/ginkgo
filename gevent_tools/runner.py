@@ -170,7 +170,6 @@ class Runner(daemon.runner.DaemonRunner):
             self.service.catch(SystemExit, lambda e,g: self.service.stop())
 
         def shed_privileges():
-            # shed privileges
             if self.uid and self.gid:
                 daemon.daemon.change_process_owner(self.uid, self.gid)
             
