@@ -1,1 +1,1 @@
-- 
+- implement do_init(*args, **kawgs) on service (too easy to forget Service needs __init__ called first)
