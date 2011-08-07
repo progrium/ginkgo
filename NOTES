@@ -1,0 +1,93 @@
+
+Gevent Tools solves:
+ - Daemonization
+ - Componentization
+ - Configuration
+ - Logging harness
+
+
+
+====
+====
+
+s = ZMQClient('this.service')
+
+class SomeService(ZMQService('this.service')):
+    implements = ('OtherService:Interface')
+    menu_providers = ExtensionPoint()
+    
+    @extends('OtherService', 'menu_providers')
+    def get_menus(self):
+        pass
+    
+    def push(self, blah):
+        pass
+
+prefix/this.service => REP
+        /host1
+        /host2
+=====
+Trac Style Option definitions for configuration:
+
+class MyClass():
+    foo = Option('category', 'name', 'default', etc)
+
+This allows for localized access to configuration with defaults without
+a global config object that is defined before services are instantiated.
+This allows configuration to be used for declarative class things.
+---
+Article progression:
+ - Services
+ - Runner
+ - Extensions?
+ - Distributed Services
+---
+
+Service uses extension points to allow distributed services?
+
+class MyInterface(Interface):
+    def something(self):
+        pass
+
+class SomeService(Service):
+    observers = ExtensionPoint(MyInterface)
+
+class SomeExtension(Service):
+    implements(MyInterface)
+    
+    def something(self):
+        pass
+
+Manual extension addition
+Automatic extension addition (extending services from config)
+
+
+singleton services? common service instance interface?
+
+self.s = Service('MySubService')
+self.add_child(self.s)
+---
+zmq type detection works with rpc style. PUSH
+
+--
+Services as state machines
+ - initialized  do_init
+ - started  do_start
+ - ready
+ - stopped  do_stop
+--
+TopLevelService / ServiceSingleton
+    -anything else
+    -(APPLICATION)
+    
+class MyService(Service):
+    netconfig = ServiceSingleton(NetConfig)
+    name = Option('name', 'blah', 'foo')
+    
+    def __init__(self):
+        self.boxconfig = NetConfig(driver='boxconfig')
+        self.add_service(self.boxconfig)
+==
+extensions assume singleton components implementing extension points
+the pubsub/gateway example relies on the pubsub extension point to reach the exact service instance
+    that extended it (ie, if cluster service, multiple instances would be load balanced across)
