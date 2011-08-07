@@ -165,6 +165,11 @@ class Service(object):
         """Empty implementation of service stop. Implement me!"""
         return
     
+    def reload(self):
+        for child in self._children:
+            child.reload()
+        self.do_reload()
+    
     def do_reload(self):
         """Empty implementation of service reload. Implement me!"""
         pass

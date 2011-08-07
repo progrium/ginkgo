@@ -144,7 +144,7 @@ class Runner(daemon.runner.DaemonRunner):
             
     def do_reload(self):
         self._log_config()
-        self.service.do_reload()
+        self.service.reload()
 
     def run(self):
         # gevent complains if you import it before you daemonize
