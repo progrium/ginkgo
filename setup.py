@@ -8,11 +8,9 @@ def shell(cmdline):
     os.execlp(args[0], *args)
 
 class GToolsCommand(Command):
+    def initialize_options(self): pass
+    def finalize_options(self): pass
     user_options = []
-    def initialize_options(self):
-        pass
-    def finalize_options(self):
-        pass
 
 class TestCommand(GToolsCommand):
     description = "run tests with nose"
