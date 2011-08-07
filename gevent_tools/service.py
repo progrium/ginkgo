@@ -3,6 +3,7 @@ import gevent.baseserver
 import gevent.event
 import gevent.pool
 import gevent.util
+from gevent_tools.util import defaultproperty
 
 NOT_READY = 1
 
@@ -19,16 +20,16 @@ class Service(object):
     until the service is actually ready.
     
     """
-    stop_timeout = 1
-    ready_timeout = 2
-    started = False
+    stop_timeout = defaultproperty(int, 1)
+    ready_timeout = defaultproperty(int, 2)
+    started = defaultproperty(bool, False)
+    _children = defaultproperty(set)
+    _stopped_event = defaultproperty(gevent.event.Event)
+    _ready_event = defaultproperty(gevent.event.Event)
+    _greenlets = defaultproperty(gevent.pool.Group)
+    _error_handlers = defaultproperty(dict)
     
-    def __init__(self):
-        self._stopped_event = gevent.event.Event()
-        self._ready_event = gevent.event.Event()
-        self._children = set()
-        self._greenlets = gevent.pool.Group()
-        self._error_handlers = {}
+
     
     @property
     def ready(self):

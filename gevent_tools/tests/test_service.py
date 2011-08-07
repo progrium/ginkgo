@@ -14,16 +14,14 @@ class SlowReadyService(service.Service):
 
 class ParentService(service.Service):
     def __init__(self):
-        super(ParentService, self).__init__()
         self.child = SlowReadyService()
         self.add_service(self.child)
 
 def test_basic_service():
     class NamedService(service.Service):
         def __init__(self, name):
-            super(NamedService, self).__init__()
             self.name = name
-    
+
     s = NamedService('test')
     s.start()
     assert s.started, "Service is not started"
@@ -62,7 +60,6 @@ def test_exception_on_start_stops_service():
 def test_greenlet_exception_catching_service():
     class GreenletExceptionService(service.Service):
         def __init__(self):
-            super(GreenletExceptionService, self).__init__()
             self.raised = False
             self.catch(IOError, self.handle_error)
             

@@ -54,3 +54,28 @@ def connect_and_retry(address, source_address=None, max_retries=None, delay=1.0,
             delay = min(delay * FACTOR, max_delay)
             delay = random.normalvariate(delay, delay * JITTER)
             gevent.sleep(delay)
+
+class defaultproperty(object):
+    """
+    Allow for default-valued properties to be added to classes.
+
+    Example usage:
+
+    class Foo(object):
+        bar = defaultproperty(list)
+    """
+    def __init__(self, default_factory, *args, **kwargs):
+        self.default_factory = default_factory
+        self.args = args
+        self.kwargs = kwargs
+
+    def __get__(self, instance, owner):
+        if instance is None:
+            return None
+        for kls in owner.__mro__:
+            for key, value in kls.__dict__.iteritems():
+                if value == self:
+                    newval = self.default_factory(*self.args, **self.kwargs)
+                    instance.__dict__[key] =newval
+                    return newval
+
