@@ -76,6 +76,7 @@ class PeerServer(service.Service):
         if self.manager.is_leader:
             self.manager.cluster.add(self.address[0])
             self.manager.trigger_callback()
+        gevent.sleep(0)
     
     def handle(self, socket, address):
         """

@@ -4,7 +4,6 @@ import gevent.event
 import gevent.pool
 import gevent.util
 
-
 NOT_READY = 1
 
 class Service(object):
@@ -181,6 +180,13 @@ class Service(object):
         except:
             self.stop(timeout=stop_timeout)
             raise
+    
+    def __enter__(self):
+        self.start()
+        return self
+    
+    def __exit__(self, type, value, traceback):
+        self.stop()
 
 class ServiceWrapper(Service):
     def __init__(self, klass_or_server, *args, **kwargs):
