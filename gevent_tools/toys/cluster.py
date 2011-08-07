@@ -43,7 +43,6 @@ class NewLeader(Exception): pass
 
 class ClusterManager(service.Service):
     def __init__(self, callback, listen_address, leader_address=None, client_hostname=None):
-        super(ClusterManager, self).__init__()
         self.server = PeerServer(self, listen_address)
         self.client = PeerClient(self, leader_address, client_hostname)
         self.cluster = set()
@@ -62,7 +61,6 @@ class ClusterManager(service.Service):
 
 class PeerServer(service.Service):
     def __init__(self, manager, address):
-        super(PeerServer, self).__init__()
         self.logger = logger(self)
         self.manager = manager
         self.address = address
@@ -141,7 +139,6 @@ class PeerServer(service.Service):
 
 class PeerClient(service.Service):
     def __init__(self, manager, leader_address, client_hostname=None):
-        super(PeerClient, self).__init__()
         self.logger = logger(self)
         self.manager = manager
         self.leader_address = leader_address

@@ -37,7 +37,3 @@ class TestUtil(TestCase):
     def test_add_ass_first_dereference_works(self):
         self.foo.bar.add(3)
         assert self.foo.bar == set([3]), "previous line throws exceptino on fail"
-
-    
-
-    

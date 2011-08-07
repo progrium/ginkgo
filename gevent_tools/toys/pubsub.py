@@ -5,7 +5,6 @@ from gevent_zeromq import zmq
 
 class PubSubService(zmqservice.ZMQService()):
     def __init__(self):
-        super(PubSubService, self).__init__()
         self.zmq_setup('mypubsub')
     
     def do_start(self):
