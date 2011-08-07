@@ -21,6 +21,7 @@ class Service(object):
     """
     stop_timeout = 1
     ready_timeout = 2
+    started = False
     
     def __init__(self):
         self._stopped_event = gevent.event.Event()
@@ -28,7 +29,6 @@ class Service(object):
         self._children = set()
         self._greenlets = gevent.pool.Group()
         self._error_handlers = {}
-        self.started = False
     
     @property
     def ready(self):
