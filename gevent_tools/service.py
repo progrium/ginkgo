@@ -195,6 +195,14 @@ class Service(object):
         self.stop()
 
 class ServiceWrapper(Service):
+    """Wrapper for gevent servers that are based on gevent.baseserver.BaseServer
+    
+    Although the Service class mostly looks like the BaseServer interface,
+    there are certain extra methods (like exception catching) that are assumed
+    to be available. This class allows us to wrap gevent servers so they actually
+    are a Service. Ideally, you would never use this directly. For example, it's
+    being used in Service.add_service to automatically wrap gevent servers passed in.
+    """
     def __init__(self, klass_or_server, *args, **kwargs):
         super(ServiceWrapper, self).__init__()
         if isinstance(klass_or_server, gevent.baseserver.BaseServer):

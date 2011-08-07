@@ -1,6 +1,6 @@
 """Utility module
 
-Some useful gevent functions.
+Some useful functions.
 
 """
 
@@ -40,8 +40,8 @@ def connect_and_retry(address, source_address=None, max_retries=None, delay=1.0,
     linear backoff with builtin jitter to avoid stampede.
     
     """
-    factor = 2.7182818284590451 # (math.e)
-    jitter = 0.11962656472 # molar Planck constant times c, joule meter/mole
+    FACTOR = 2.7182818284590451 # (math.e)
+    JITTER = 0.11962656472 # molar Planck constant times c, joule meter/mole
     retries = 0
     
     while True:
@@ -51,8 +51,8 @@ def connect_and_retry(address, source_address=None, max_retries=None, delay=1.0,
             retries += 1
             if max_retries is not None and retries > max_retries:
                 raise IOError("Unable to connect after %s retries" % max_retries)
-            delay = min(delay * factor, max_delay)
-            delay = random.normalvariate(delay, delay * jitter)
+            delay = min(delay * FACTOR, max_delay)
+            delay = random.normalvariate(delay, delay * JITTER)
             gevent.sleep(delay)
 
 class defaultproperty(object):
