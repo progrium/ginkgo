@@ -1,9 +1,11 @@
 
 _registry = {}
 
+class Namespace(dict): pass
+
 def load(context, basepath=''):
     for k in context:
-        if isinstance(context[k], dict):
+        if isinstance(context[k], Namespace):
             load(context[k], '%s.' % k)
         else:
             _registry[''.join([basepath, k]).lower()] = context[k]
