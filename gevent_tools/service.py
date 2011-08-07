@@ -4,7 +4,6 @@ import gevent.event
 import gevent.pool
 import gevent.util
 
-from gevent_tools.util import ServiceWrapper
 
 NOT_READY = 1
 
@@ -182,3 +181,17 @@ class Service(object):
         except:
             self.stop(timeout=stop_timeout)
             raise
+
+class ServiceWrapper(Service):
+    def __init__(self, klass_or_server, *args, **kwargs):
+        super(ServiceWrapper, self).__init__()
+        if isinstance(klass_or_server, gevent.baseserver.BaseServer):
+            self.wrapped = klass_or_server
+        else:
+            self.wrapped = klass(*args, **kwargs)
+    
+    def do_start(self):
+        self.spawn(self.wrapped.start)
+    
+    def do_stop(self):
+        self.wrapped.stop()

@@ -8,5 +8,5 @@ def hello():
 
 def service():
     from gevent.wsgi import WSGIServer
-    from gevent_tools.util import ServiceWrapper
-    return ServiceWrapper(WSGIServer, ('', port), app)    
+    from gevent_tools.service import ServiceWrapper
+    return ServiceWrapper(WSGIServer(('', port), app))

@@ -7,23 +7,6 @@ Some useful gevent functions.
 import random
 
 import gevent.socket
-import gevent.baseserver
-
-from gevent_tools.service import Service
-
-class ServiceWrapper(Service):
-    def __init__(self, klass_or_server, *args, **kwargs):
-        super(ServiceWrapper, self).__init__()
-        if isinstance(klass_or_server, gevent.baseserver.BaseServer):
-            self.wrapped = klass_or_server
-        else:
-            self.wrapped = klass(*args, **kwargs)
-    
-    def do_start(self):
-        self.spawn(self.wrapped.start)
-    
-    def do_stop(self):
-        self.wrapped.stop()
 
 def line_protocol(socket_or_file, strip=True):
     """Generator for looping line-based protocol
