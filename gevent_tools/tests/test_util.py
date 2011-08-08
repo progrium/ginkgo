@@ -29,7 +29,7 @@ def test_default_property_mutable():
 def test_default_is_iterable():
     Foo = _make_class(object)
     foo = Foo()
-    assert [x for x in foo.bar] == [], "can iterate over self reference"
+    assert [x for x in foo.bar] == [], "can iterate over iterable default"
 
 def test_add_as_first_dereference_works():
     Foo = _make_class(object)
