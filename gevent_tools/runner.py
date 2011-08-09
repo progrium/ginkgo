@@ -74,11 +74,18 @@ class Runner(daemon.runner.DaemonRunner):
             self.stderr_path, 'a+', buffering=1)
 
         self.pidfile = None
-        if self.pidfile_abspath is not None:
-            self.pidfile = daemon.runner.make_pidlockfile(
-                self.pidfile_abspath, self.pidfile_timeout)
+        if self.pidfile_abspath:
+            pidfilepath = self.pidfile_abspath
+            # workaround for bug in python-daemon that can not correctly
+            # determine where the pid file is located when the chroot option
+            # is specified
+            if self.chroot_abspath:
+                pidfilepath = os.path.join(self.chroot_abspath,
+                                           self.pidfile_abspath[1:])
+            self.pidfile = daemon.runner.make_pidlockfile(pidfilepath,
+                self.pidfile_timeout)
         self.daemon_context.pidfile = self.pidfile
-        self.daemon_context.chroot_directory = self.chroot_path
+        self.daemon_context.chroot_directory = self.chroot_abspath
     
     def load_config(self, parser):
         options, args = parser.parse_args(self._args)
@@ -180,7 +187,17 @@ class Runner(daemon.runner.DaemonRunner):
         self.service.stop()
 
     def _reload(self):
-        os.kill(self.pidfile.read_pid(), signal.SIGUSR1)
+        os.kill(int(self.pidfile.read_pid()), signal.SIGUSR1)
+
+    def _start(self):
+        # workaround for bug in python-daemon that can not correctly
+        # determine where the pid file is located when the chroot option
+        # is specified
+        if self.pidfile_abspath:
+            self.pidfile = daemon.runner.make_pidlockfile(
+                self.pidfile_abspath, self.pidfile_timeout)
+            self.daemon_context.pidfile = self.pidfile
+        super(Runner, self)._start()
 
     def _run(self):
         print "Starting service..."
