@@ -7,6 +7,12 @@ from gevent_tools.util import defaultproperty
 
 NOT_READY = 1
 
+def require_ready(func):
+    def wrapped(*args, **kwargs):
+        assert args[0].ready, "Service must be ready to call this method."
+        func(*args, **kwargs)
+    return wrapped
+
 class Service(object):
     """Service base class for creating standalone or composable services
     
@@ -23,13 +29,12 @@ class Service(object):
     stop_timeout = defaultproperty(int, 1)
     ready_timeout = defaultproperty(int, 2)
     started = defaultproperty(bool, False)
+    
     _children = defaultproperty(set)
     _stopped_event = defaultproperty(gevent.event.Event)
     _ready_event = defaultproperty(gevent.event.Event)
     _greenlets = defaultproperty(gevent.pool.Group)
     _error_handlers = defaultproperty(dict)
-    
-
     
     @property
     def ready(self):

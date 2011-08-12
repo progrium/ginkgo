@@ -180,7 +180,7 @@ class Runner(daemon.runner.DaemonRunner):
             if self.uid and self.gid:
                 daemon.daemon.change_process_owner(self.uid, self.gid)
             
-        self.service.serve_forever(ready_callback = shed_privileges)
+        self.service.serve_forever(ready_callback=shed_privileges)
     
     def terminate(self):
         # XXX: multiple SIGTERM signals should forcibly quit the process
