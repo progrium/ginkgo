@@ -82,8 +82,14 @@ class Service(object):
         return wrapped_f
     
     def catch(self, type, handler):
-        """Set an error handler for exceptions of `type` raised in greenlets"""
+        """Set an error handler for exceptions.
+        
+        Catches exceptions of `type` raised in greenlets for this service
+        and recursively any existing child services.
+        """
         self._error_handlers[type] = (handler, gevent.getcurrent())
+        for child in self._children:
+            child.catch(type, handler)
     
     def spawn(self, func, *args, **kwargs):
         """Spawn a greenlet under this service"""
