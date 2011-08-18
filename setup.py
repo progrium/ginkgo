@@ -35,7 +35,7 @@ setup(
     data_files=[],
     entry_points={
         'console_scripts': [
-            'serviced = gevent_tools.runner:main',]},
+            'gservice = gevent_tools.runner:main',]},
     cmdclass={
         'test': TestCommand,
         'coverage': CoverageCommand,}
