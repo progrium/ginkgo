@@ -5,9 +5,12 @@ import gevent.pool
 import gevent.util
 from gevent_tools.util import defaultproperty
 
+import functools
+
 NOT_READY = 1
 
 def require_ready(func):
+    @functools.wraps(func)
     def wrapped(*args, **kwargs):
         assert args[0].ready, "Service must be ready to call this method."
         func(*args, **kwargs)
@@ -69,6 +72,7 @@ class Service(object):
         a stack trace for exceptions running in parallel greenlets.
         
         """
+        @functools.wraps(func)
         def wrapped_f(*args, **kwargs):
             exceptions = tuple(self._error_handlers.keys())
             try:
