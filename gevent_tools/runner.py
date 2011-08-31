@@ -154,6 +154,11 @@ class Runner(daemon.runner.DaemonRunner):
         self.service.reload()
 
     def run(self):
+        if 'gevent' in sys.modules:
+            sys.stdout.write("Fatal error: you cannot import gevent in your"
+                             " configuration file.  Aborting.\n")
+            raise SystemExit(1)
+        
         # gevent complains if you import it before you daemonize
         import gevent
         gevent.signal(signal.SIGUSR1, self.do_reload)
