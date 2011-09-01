@@ -22,11 +22,6 @@ class GlobalService(gevent_tools.service.Service):
         for name, service in children:
             self._children.append(service)
             gevent_tools.service.Service(name=name, service=service, register=True)
-        # we'll keep a copy of this children array so that we don't
-        # force child services to implement __eq__ correctly by calling
-        # remove
-        self._shutdown_wait_children = list(self._children)
-        
         # and append main_service so that it's started last
         self._children.append(main_service)
         self.main_service = main_service
@@ -38,11 +33,7 @@ class GlobalService(gevent_tools.service.Service):
                 ready_callback()
         try:
             self.main_service._stopped_event.wait()
-            # we've already waited for the main_service so we just need to
-            # tell the other children to stop now, swap out _children
-            # note: do *not* call .remove_child() here because it forces
-            # all application-level services to implement __eq__ correctly
-            self._children = self._shutdown_wait_children
+            # tell the other children to stop now
             self.stop(timeout=stop_timeout)
         except:
             self.stop(timeout=stop_timeout)

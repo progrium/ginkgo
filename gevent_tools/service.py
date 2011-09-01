@@ -159,9 +159,11 @@ class Service(object):
             self.pre_start()
             for child in self._children:
                 if isinstance(child, Service):
-                    child.start(block_until_ready)
+                    if not child.started:
+                        child.start(block_until_ready)
                 elif isinstance(child, gevent.baseserver.BaseServer):
-                    child.start()
+                    if not child.started:
+                        child.start()
             ready = self.do_start()
             if ready == NOT_READY and block_until_ready is True:
                 self._ready_event.wait(self.ready_timeout)
@@ -202,7 +204,8 @@ class Service(object):
             for child in reversed(self._children):
                 #iterate over children in reverse order, in case dependancies
                 # were implied by the starting order
-                child.stop()
+                if child.started:
+                    child.stop()
             self.do_stop()
         finally:
             if timeout is None:
