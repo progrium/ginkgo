@@ -7,6 +7,20 @@ from gevent_tools.util import defaultproperty
 
 import functools
 
+"""
+State for global services, see globalservices.py for implementation
+
+Variables are in this file to avoid importing globalservice from service,
+causing the parent for GlobalService to be uninstantiated at class instantiation
+time.
+"""
+_global_services = {}
+
+def _get_global_service(name, dict=_global_services):
+    return dict.get(name, None)
+
+
+
 NOT_READY = 1
 
 def require_ready(func):
@@ -33,11 +47,38 @@ class Service(object):
     ready_timeout = defaultproperty(int, 2)
     started = defaultproperty(bool, False)
     
-    _children = defaultproperty(set)
+    _children = defaultproperty(list)
     _stopped_event = defaultproperty(gevent.event.Event)
     _ready_event = defaultproperty(gevent.event.Event)
     _greenlets = defaultproperty(gevent.pool.Group)
     _error_handlers = defaultproperty(dict)
+
+    def __new__(cls, *args, **kwargs):
+        """
+        Allow for Service('name') to lookup named global services.
+        """
+        if cls == Service:
+            use_dict = _global_services
+            if 'mock_dict' in kwargs:
+                #this is for testing
+                use_dict = kwargs['mock_dict']
+            else:
+                use_dict = _global_services
+
+            if 'register' in kwargs and kwargs['register']:
+                name = kwargs['name']
+                service = kwargs.get('service')
+                use_dict[name] = service
+                return None
+            elif 'name' in kwargs:
+                service = _get_global_service(kwargs['name'], use_dict)
+                return service
+            else:
+                service = _get_global_service(args[0], use_dict)
+                return service
+        else:
+            return super(Service, cls).__new__(cls)
+        
     
     @property
     def ready(self):
@@ -58,7 +99,7 @@ class Service(object):
         """
         if isinstance(service, gevent.baseserver.BaseServer):
             service = ServiceWrapper(service)
-        self._children.add(service)
+        self._children.append(service)
     
     def remove_service(self, service):
         """Remove a child service from this service"""
@@ -158,7 +199,9 @@ class Service(object):
         self.started = False
         try:
             self.pre_stop()
-            for child in self._children:
+            for child in reversed(self._children):
+                #iterate over children in reverse order, in case dependancies
+                # were implied by the starting order
                 child.stop()
             self.do_stop()
         finally:
