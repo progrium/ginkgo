@@ -3,7 +3,7 @@ import gevent_tools.service
 class GlobalService(gevent_tools.service.Service):
     """
     GlobalService is the main service for all gevent-tools based daemons.
-    Creation and management if MasterService is managed directly by the gservice
+    Creation and management of GlobalService is managed directly by the gservice
     runner.
 
     GlobalService is the parent service for all named global services, and they
