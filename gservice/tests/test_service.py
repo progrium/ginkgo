@@ -1,7 +1,7 @@
 import gevent
 import nose.tools
 
-from gevent_tools import service
+from gservice import service
 
 class SlowReadyService(service.Service):
     def do_start(self):

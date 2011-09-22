@@ -3,7 +3,7 @@ from gevent.pywsgi import WSGIServer
 from gevent.server import StreamServer
 from gevent.socket import create_connection
 
-from gevent_tools.service import Service
+from gservice.core import Service
 
 class TcpClient(Service):
     def __init__(self, address, handler):

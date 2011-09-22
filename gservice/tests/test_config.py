@@ -1,6 +1,6 @@
 from nose.tools import with_setup, raises
 
-from gevent_tools import config
+from gservice import config
 
 def setup(): pass
 

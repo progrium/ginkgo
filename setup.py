@@ -22,7 +22,7 @@ class CoverageCommand(GToolsCommand):
     description = "run test coverage report with nose"
     
     def run(self):
-        shell("nosetests --with-coverage --cover-package=gevent_tools")
+        shell("nosetests --with-coverage --cover-package=gservice")
 
 setup(
     name='gservice',
@@ -35,7 +35,7 @@ setup(
     data_files=[],
     entry_points={
         'console_scripts': [
-            'gservice = gevent_tools.runner:main',]},
+            'gservice = gservice.runner:main',]},
     cmdclass={
         'test': TestCommand,
         'coverage': CoverageCommand,}
