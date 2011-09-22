@@ -1,1 +1,9 @@
-- implement do_init(*args, **kawgs) on service (too easy to forget Service needs __init__ called first)
+- rename/rebrand as gservice
+- change "service" module to "core"
+- replace Option with Setting
+- pull toys out into a branch
+- update documentation
+
+- get runner to run twisted apps
+- figure out chrooted logging
+- setting type validation
