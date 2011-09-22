@@ -25,8 +25,8 @@ class CoverageCommand(GToolsCommand):
         shell("nosetests --with-coverage --cover-package=gevent_tools")
 
 setup(
-    name='gevent_tools',
-    version='0.1.0',
+    name='gservice',
+    version='0.2.0',
     author='Jeff Lindsay',
     author_email='jeff.lindsay@twilio.com',
     description='gevent related goodies',
