@@ -171,6 +171,9 @@ class Runner(daemon.runner.DaemonRunner):
         if self.proc_name:
             setproctitle.setproctitle(self.proc_name)
 
+        if not self.service_factory:
+            print "[ERROR] No service factory is defined in configuration"
+            sys.exit(88)
         self.service = self.service_factory()
 
         if hasattr(self.service, 'catch'):
