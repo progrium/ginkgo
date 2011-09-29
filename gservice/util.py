@@ -6,8 +6,6 @@ Some useful functions.
 
 import random
 
-import gevent.socket
-
 def line_protocol(socket_or_file, strip=True):
     """Generator for looping line-based protocol
     
@@ -40,6 +38,8 @@ def connect_and_retry(address, source_address=None, max_retries=None, delay=1.0,
     linear backoff with builtin jitter to avoid stampede.
     
     """
+    import gevent.socket
+
     FACTOR = 2.7182818284590451 # (math.e)
     JITTER = 0.11962656472 # molar Planck constant times c, joule meter/mole
     retries = 0
