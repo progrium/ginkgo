@@ -1,25 +1,25 @@
 import gevent
 import nose.tools
 
-from gevent_tools.tests import silencer
-from gevent_tools.tests import mock_open
+from gservice.tests import silencer
+from gservice.tests import mock_open
 
 @nose.tools.raises(SystemExit)
 def test_runner_action_required():
-    from gevent_tools.runner import Runner
+    from gservice.runner import Runner
     Runner._args = []
     with silencer():
         Runner()
 
 @nose.tools.raises(SystemExit)
 def test_runner_config_required():
-    from gevent_tools.runner import Runner
+    from gservice.runner import Runner
     Runner._args = ['start']
     with silencer():
         Runner()
 
 def test_runner_reads_config():
-    from gevent_tools.runner import Runner
+    from gservice.runner import Runner
     Runner._args = ['start', '-C', 'config']
     Runner._opener = mock_open({"config": "", "serviced.log": ""})
     with silencer():
@@ -27,7 +27,7 @@ def test_runner_reads_config():
 
 @nose.tools.raises(SystemExit)
 def test_runner_no_daemonize():
-    from gevent_tools.runner import Runner
+    from gservice.runner import Runner
     class EmptyRunner(Runner):
         def run(self): pass
     EmptyRunner._args = ['start', '-C', 'config', '-n']
@@ -37,8 +37,8 @@ def test_runner_no_daemonize():
 
 
 def test_read_config_option():
-    from gevent_tools.runner import Runner
-    from gevent_tools.config import Option
+    from gservice.runner import Runner
+    from gservice.config import Option
 
     class ConfigCheckRunner(Runner):
         foo = Option('foo')
@@ -54,7 +54,7 @@ def test_read_config_option():
 def test_command_line_override_config():
     """ Test that specifying an option on the command line override any
         value set in a config file"""
-    from gevent_tools.runner import Runner
+    from gservice.runner import Runner
 
     class ConfigCheckRunner(Runner):
         def run(self):
@@ -68,8 +68,8 @@ def test_command_line_override_config():
 
 
 def test_extend_file_config_option():
-    from gevent_tools.runner import Runner
-    from gevent_tools.config import Option
+    from gservice.runner import Runner
+    from gservice.config import Option
 
     class ConfigCheckRunner(Runner):
         foo = Option('foo')
@@ -84,8 +84,8 @@ def test_extend_file_config_option():
         ConfigCheckRunner().do_action()
 
 def test_extend_file_config_option():
-    from gevent_tools.runner import Runner
-    from gevent_tools.config import Option
+    from gservice.runner import Runner
+    from gservice.config import Option
 
     class ConfigCheckRunner(Runner):
         foo = Option('foo')
@@ -100,8 +100,8 @@ def test_extend_file_config_option():
 
 
 def test_privileged_configuration():
-    from gevent_tools.runner import Runner
-    from gevent_tools import config
+    from gservice.runner import Runner
+    from gservice import config
 
     uids = {}
 
@@ -125,8 +125,8 @@ def test_privileged_configuration():
 
     # capture the uid of the service at start and stop time
     def service():
-        import gevent_tools.service
-        class Service(gevent_tools.service.Service):
+        import gservice.core
+        class Service(gservice.core.Service):
             def do_start(self):
                 print "asked to do_start"
                 uids['start'] = os.getuid()

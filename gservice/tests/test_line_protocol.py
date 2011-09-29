@@ -1,7 +1,7 @@
 import gevent.socket
 import gevent.server
 
-from gevent_tools import util
+from gservice import util
 
 def test_one_liner():
     one_line = 'hello and goodbye!'

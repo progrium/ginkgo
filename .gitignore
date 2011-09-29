@@ -1,4 +1,4 @@
-gevent_tools.egg-info
+gservice.egg-info
 *.log
 *.pid
 .coverage

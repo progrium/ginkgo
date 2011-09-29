@@ -28,7 +28,7 @@ def service():
     """Required service function"""
     # It's important to know you MUST make any imports that
     # use gevent to happen INSIDE this function
-    from gevent_tools.service import Service
+    from gservice.core import Service
 
     class CronService(Service):
 

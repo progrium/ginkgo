@@ -13,7 +13,7 @@ import daemon
 import daemon.daemon
 import daemon.runner
 
-from gevent_tools import config
+from gservice import config
 
 class RunnerStartException(Exception): pass
 

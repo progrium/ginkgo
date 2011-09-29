@@ -3,7 +3,7 @@ import gevent.baseserver
 import gevent.event
 import gevent.pool
 import gevent.util
-from gevent_tools.util import defaultproperty
+from gservice.util import defaultproperty
 
 import functools
 

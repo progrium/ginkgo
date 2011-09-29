@@ -18,7 +18,7 @@ def service():
     # It's important to know you MUST make any imports that
     # use gevent to happen INSIDE this function
     import gevent
-    from gevent_tools.service import Service
+    from gservice.core import Service
     
     # Normally you would just import your app and instanciate, but here
     # we are making a service up right here.

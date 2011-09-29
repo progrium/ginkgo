@@ -16,7 +16,7 @@ def changed(obj, property):
     except KeyError:
         return obj.__class__.__dict__[property].changed
 
-class Option(object):
+class Setting(object):
     def __init__(self, path, default=None, doc=''):
         self.path = path.lower()
         self.default = default
@@ -40,3 +40,5 @@ class Option(object):
             self._last_value = self.value
         return has_changed
 
+# Using Option is now deprecated. Use Setting instead
+Option = Setting
