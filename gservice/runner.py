@@ -217,8 +217,8 @@ class Runner(daemon.runner.DaemonRunner):
 
         children, main_service = self._expand_service_generators(service_gen)
 
-        import gevent_tools.globalservice
-        self.service = gevent_tools.globalservice.GlobalService(children,
+        import gservice.globalservice
+        self.service = gservice.globalservice.GlobalService(children,
             main_service)
 
         if hasattr(self.service, 'catch'):

@@ -1,6 +1,6 @@
-import gevent_tools.service
+import gservice.core
 
-class GlobalService(gevent_tools.service.Service):
+class GlobalService(gservice.core.Service):
     """
     GlobalService is the main service for all gevent-tools based daemons.
     Creation and management of GlobalService is managed directly by the gservice
@@ -21,7 +21,7 @@ class GlobalService(gevent_tools.service.Service):
         self._children = []
         for name, service in children:
             self._children.append(service)
-            gevent_tools.service.Service(name=name, service=service, register=True)
+            gservice.core.Service(name=name, service=service, register=True)
         # and append main_service so that it's started last
         self._children.append(main_service)
         self.main_service = main_service

@@ -153,8 +153,8 @@ def test_privileged_configuration():
 
 def test_service_generator():
     
-    import gevent_tools.service
-    class MyService(gevent_tools.service.Service): pass
+    import gservice.core
+    class MyService(gservice.core.Service): pass
 
     expected_children = [('hi', MyService()), ('also named', MyService())]
     expected_main = MyService()
@@ -164,7 +164,7 @@ def test_service_generator():
             yield name, child
         yield expected_main
         
-    from gevent_tools.runner import Runner
+    from gservice.runner import Runner
     
     Runner._args = ['run', '-C', 'config', '-u', 'nobody']
     Runner._opener = mock_open({"config": ""})
@@ -180,7 +180,7 @@ def test_service_generator():
     assert main_service == expected_main
 
 def get_runner():
-    from gevent_tools.runner import Runner
+    from gservice.runner import Runner
     
     Runner._args = ['run', '-C', 'config', '-u', 'nobody']
     Runner._opener = mock_open({"config": ""})
@@ -189,9 +189,9 @@ def get_runner():
     return runner
 
 def test_invalid_names_throw():
-    import gevent_tools.service
-    from gevent_tools.runner import RunnerStartException
-    class MyService(gevent_tools.service.Service): pass
+    import gservice.core
+    from gservice.runner import RunnerStartException
+    class MyService(gservice.core.Service): pass
 
     def service():
         try:
@@ -206,9 +206,9 @@ def test_invalid_names_throw():
     children, main_service = runner._expand_service_generators(service())    
 
 def test_invalid_name_empty_throw():
-    import gevent_tools.service
-    from gevent_tools.runner import RunnerStartException
-    class MyService(gevent_tools.service.Service): pass
+    import gservice.core
+    from gservice.runner import RunnerStartException
+    class MyService(gservice.core.Service): pass
 
     def service():
         try:
@@ -222,9 +222,9 @@ def test_invalid_name_empty_throw():
     children, main_service = runner._expand_service_generators(service())
 
 def test_invalid_tuple_length_throws():
-    import gevent_tools.service
-    from gevent_tools.runner import RunnerStartException
-    class MyService(gevent_tools.service.Service): pass
+    import gservice.core
+    from gservice.runner import RunnerStartException
+    class MyService(gservice.core.Service): pass
  
     def service():
         try:
@@ -238,9 +238,9 @@ def test_invalid_tuple_length_throws():
     children, main_service = runner._expand_service_generators(service())
 
 def test_setting_main_before_named_throws():
-    import gevent_tools.service
-    from gevent_tools.runner import RunnerStartException
-    class MyService(gevent_tools.service.Service): pass
+    import gservice.core
+    from gservice.runner import RunnerStartException
+    class MyService(gservice.core.Service): pass
 
     def service():
         yield MyService() #set mainservice
@@ -255,7 +255,7 @@ def test_setting_main_before_named_throws():
     children, main_service = runner._expand_service_generators(service())
 
 def test_named_global_services():
-    from gevent_tools import config
+    from gservice import config
     from collections import defaultdict
     expected = defaultdict(list)
     lookup = {}
@@ -274,24 +274,24 @@ def test_named_global_services():
     os.setgid = setgid
 
     def service():
-        import gevent_tools.service
-        class MainService(gevent_tools.service.Service):
+        import gservice.core
+        class MainService(gservice.core.Service):
             def __init__(self, name):
                 self.name = name
                 
             def do_start(self):
                 print "main service starting"
                 gevent.spawn_later(0.1, self.stop)
-                lookup['named'] = gevent_tools.service.Service('named')
-                lookup['named2'] = gevent_tools.service.Service('named2')
-                lookup['foo'] = gevent_tools.service.Service('foo')
+                lookup['named'] = gservice.core.Service('named')
+                lookup['named2'] = gservice.core.Service('named2')
+                lookup['foo'] = gservice.core.Service('foo')
                 expected[self.name].append('start')
             
             def do_stop(self):
                 print "asked to do_stop"
                 expected[self.name].append('stop')
 
-        class GS(gevent_tools.service.Service):
+        class GS(gservice.core.Service):
 
             def __init__(self, name):
                 self.name = name
