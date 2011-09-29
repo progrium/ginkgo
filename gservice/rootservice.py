@@ -1,13 +1,13 @@
 import gservice.core
 
-class MainService(gservice.core.Service):
+class RootService(gservice.core.Service):
     """
-    MainService is the main service for all gsevice based daemons.
-    Creation and management of MainService is managed directly by the gservice
+    RootService is the main service for all gsevice based daemons.
+    Creation and management of RootService is managed directly by the gservice
     runner.
 
-    MainService is the parent service for all named global services, and they
-    will be stopped when MainService is stopped.  MainService is also the
+    RootService is the parent service for all named global services, and they
+    will be stopped when RootService is stopped.  RootService is also the
     parent for the main service.
     """
     
