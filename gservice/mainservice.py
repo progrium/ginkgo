@@ -1,13 +1,13 @@
 import gservice.core
 
-class GlobalService(gservice.core.Service):
+class MainService(gservice.core.Service):
     """
-    GlobalService is the main service for all gevent-tools based daemons.
-    Creation and management of GlobalService is managed directly by the gservice
+    MainService is the main service for all gevent-tools based daemons.
+    Creation and management of MainService is managed directly by the gservice
     runner.
 
-    GlobalService is the parent service for all named global services, and they
-    will be stopped when GlobalService is stopped.  GlobalService is also the
+    MainService is the parent service for all named global services, and they
+    will be stopped when MainService is stopped.  MainService is also the
     parent for the main service.
     """
     
@@ -21,7 +21,8 @@ class GlobalService(gservice.core.Service):
         self._children = []
         for name, service in children:
             self._children.append(service)
-            gservice.core.Service(name=name, service=service, register=True)
+            gservice.core.Service.register_named_service(name=name,
+                service=service)
         # and append main_service so that it's started last
         self._children.append(main_service)
         self.main_service = main_service

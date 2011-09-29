@@ -14,9 +14,9 @@ Variables are in this file to avoid importing globalservice from service,
 causing the parent for GlobalService to be uninstantiated at class instantiation
 time.
 """
-_global_services = {}
+_main_services = {}
 
-def _get_global_service(name, dict=_global_services):
+def _get_main_service(name, dict=_main_services):
     return dict.get(name, None)
 
 
@@ -53,28 +53,28 @@ class Service(object):
     _greenlets = defaultproperty(gevent.pool.Group)
     _error_handlers = defaultproperty(dict)
 
+    @classmethod
+    def register_named_service(cls, name, service, use_dict=_main_services):
+        use_dict[name] = service
+
+    @classmethod
+    def _get_named_service(cls, name, use_dict=_main_services):
+        return _get_main_service(name, use_dict)
+
     def __new__(cls, *args, **kwargs):
         """
         Allow for Service('name') to lookup named global services.
         """
         if cls == Service:
-            use_dict = _global_services
             if 'mock_dict' in kwargs:
-                #this is for testing
                 use_dict = kwargs['mock_dict']
             else:
-                use_dict = _global_services
-
-            if 'register' in kwargs and kwargs['register']:
-                name = kwargs['name']
-                service = kwargs.get('service')
-                use_dict[name] = service
-                return None
-            elif 'name' in kwargs:
-                service = _get_global_service(kwargs['name'], use_dict)
+                use_dict = _main_services
+            if 'name' in kwargs:
+                service = cls._get_named_service(kwargs['name'], use_dict)
                 return service
             else:
-                service = _get_global_service(args[0], use_dict)
+                service = cls._get_named_service(args[0], use_dict)
                 return service
         else:
             return super(Service, cls).__new__(cls)

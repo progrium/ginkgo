@@ -152,9 +152,9 @@ def test_service_ctor_doesnt_fire_in_subclass():
 
     assert isinstance(gs, SubService)
 
-def test_service_ctor_register():
+def test_service_register():
     mock_dict = {}
-    gs = service.Service(name='test', service=1, mock_dict=mock_dict, register=True)
+    gs = service.Service.register_named_service(name='test', service=1, use_dict=mock_dict)
     print mock_dict
     assert mock_dict == {'test': 1}
 
