@@ -2,7 +2,7 @@ import gservice.core
 
 class MainService(gservice.core.Service):
     """
-    MainService is the main service for all gevent-tools based daemons.
+    MainService is the main service for all gsevice based daemons.
     Creation and management of MainService is managed directly by the gservice
     runner.
 
@@ -35,7 +35,13 @@ class MainService(gservice.core.Service):
         try:
             self.main_service._stopped_event.wait()
             # tell the other children to stop now
-            self.stop(timeout=stop_timeout)
+        except KeyboardInterrupt:
+            # swallowing keyboard interrupt
+            self.stop(timeout=stop_timeout)            
         except:
+            # raising other exceptions
             self.stop(timeout=stop_timeout)
             raise
+        else:
+            # or just stopping if no exception
+            self.stop(timeout=stop_timeout)
