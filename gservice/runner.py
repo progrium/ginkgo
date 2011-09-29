@@ -191,8 +191,8 @@ class Runner(daemon.runner.DaemonRunner):
 
     def run(self):
         if ('gevent' in sys.modules and
-           not config.Option('_allow_early_gevent_import_for_tests')):
-            sys.stdout.write("Fatal error: you cannot import gevent in your"
+           not config.Option('_allow_early_gevent_import_for_tests').value):
+            sys.stderr.write("Fatal error: you cannot import gevent in your"
                              " configuration file.  Aborting.\n")
             raise SystemExit(1)
         
