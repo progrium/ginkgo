@@ -59,19 +59,28 @@ class SomeService(Service):
             print provider.menu_items()
 
 class AnotherService(Service):
-    menu_provider = Extends('SomeService.menu_providers')
+    menu_provider = Extension('SomeService.menu_providers')
     
     @menu_provider
     def menu_items(self):
         return ['ab', 'bc']
 
 class OneMoreService(Service):
-    provider = Extends('SomeService.menu_providers')
+    provider = Extension('SomeService.menu_providers')
     
     @provider('menu_items')
     def get_items_for_menu(self):
         return ['123', '456', '678']
 
+class MyPlugin(object):
+    provider = Extension('SomeService.menu_providers')
+    
+    @provider
+    def menu_items(self):
+        return ['foo', 'bar']
+
+Service('__plugins__').register(MyPlugin)
+    
 
 ===
 
