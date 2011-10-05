@@ -69,6 +69,10 @@ class Runner(daemon.runner.DaemonRunner):
         self.app = self
         
         self.parse_args(self.load_config(runner_options()))
+        # horrible hack, daemon tries to remove PID files owned by root
+        # at exit by calling self.close().  We make that a noop so that
+        # it won't raise a permission exception every time you call 'stop'
+        daemon.DaemonContext.close = (lambda s: None)
         self.daemon_context = daemon.DaemonContext()
         self.daemon_context.stdin = self._open(self.stdin_path, 'r')
         self.daemon_context.stdout = self._open(
