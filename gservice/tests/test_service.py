@@ -137,4 +137,27 @@ def test_service_greenlets():
     for greenlet in s._greenlets:
         assert greenlet.ready(), "Greenlet isn't ready after stop"
 
-                
+def test_service_ctor():
+    gs = service.Service('test', mock_dict={'test': 1})
+    assert gs == 1
+
+def test_service_ctor_doesnt_fire_in_subclass():
+    expected_name = 'hello, world'
+    class SubService(service.Service):
+        def __init__(self, name, **kwargs):
+            print name
+            assert name == expected_name
+
+    gs = SubService('hello, world', mock_dict={'hello, world', 1})
+
+    assert isinstance(gs, SubService)
+
+def test_service_register():
+    mock_dict = {}
+    gs = service.Service.register_named_service(name='test', service=1, use_dict=mock_dict)
+    print mock_dict
+    assert mock_dict == {'test': 1}
+
+def test_service_lookup_named():
+    gs = service.Service(name='test', mock_dict=dict(test=1))
+    assert gs == 1
