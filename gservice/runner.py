@@ -93,6 +93,25 @@ class Runner(daemon.runner.DaemonRunner):
                 self.pidfile_timeout)
         self.daemon_context.pidfile = self.pidfile
         self.daemon_context.chroot_directory = self.chroot_abspath
+
+        # open the log files
+        self._log_config()
+
+        logger_files = set()
+        # find all open filedescriptors opened for logging
+        if self.log_config:
+            for name, cfg in self.log_config.get("loggers").items():
+                l = logging.getLogger(name)
+                for h in l.handlers:
+                    try:
+                        logger_files.add(h.stream.fileno())
+                    except AttributeError:
+                        # handler doesn't have an open fd
+                        pass
+
+        # preserve open file descriptors used for logging
+        self.daemon_context.files_preserve=list(logger_files)
+
     
     def load_config(self, parser):
         options, args = parser.parse_args(self._args)
@@ -211,8 +230,6 @@ class Runner(daemon.runner.DaemonRunner):
             # directory in the module search path
             sys.path.append(os.path.dirname(self.config_path))
             sys.path.append(os.getcwd())
-
-        self._log_config()
 
         if self.proc_name:
             setproctitle.setproctitle(self.proc_name)
