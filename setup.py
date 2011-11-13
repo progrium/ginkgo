@@ -18,6 +18,13 @@ class TestCommand(GToolsCommand):
     def run(self):
         shell("nosetests")
 
+class BuildPagesCommand(GToolsCommand):
+    description = "rebuild the website"
+    
+    def run(self):
+        os.execlp("bash", "bash", "-c", """branch=$(git status | grep 'On branch' | cut -f 4 -d ' ')
+            git checkout gh-pages && git commit --allow-empty -m 'trigger pages rebuild' && git checkout $branch""")
+
 class CoverageCommand(GToolsCommand):
     description = "run test coverage report with nose"
     
@@ -38,5 +45,6 @@ setup(
             'gservice = gservice.runner:main',]},
     cmdclass={
         'test': TestCommand,
-        'coverage': CoverageCommand,}
+        'coverage': CoverageCommand,
+        'build_pages': BuildPagesCommand,}
 )
