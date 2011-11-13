@@ -3,4 +3,5 @@ layout: default
 title: Test Test??
 ---
 
+{% capture content %}{% include wiki/Test.md %}{% endcapture %}{{ content | markdownify }}
 {% capture content %}{% include wiki/Home.md %}{% endcapture %}{{ content | markdownify }}
