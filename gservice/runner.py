@@ -3,6 +3,7 @@ import optparse
 import os.path
 import sys
 import time
+import types
 import signal
 import logging.config
 import pwd
@@ -13,6 +14,8 @@ import daemon.daemon
 import daemon.runner
 
 from gservice import config
+
+class RunnerStartException(Exception): pass
 
 def main():
     """Entry point for serviced console script"""
@@ -66,6 +69,10 @@ class Runner(daemon.runner.DaemonRunner):
         self.app = self
         
         self.parse_args(self.load_config(runner_options()))
+        # horrible hack, daemon tries to remove PID files owned by root
+        # at exit by calling self.close().  We make that a noop so that
+        # it won't raise a permission exception every time you call 'stop'
+        daemon.DaemonContext.close = (lambda s: None)
         self.daemon_context = daemon.DaemonContext()
         self.daemon_context.stdin = self._open(self.stdin_path, 'r')
         self.daemon_context.stdout = self._open(
@@ -86,6 +93,25 @@ class Runner(daemon.runner.DaemonRunner):
                 self.pidfile_timeout)
         self.daemon_context.pidfile = self.pidfile
         self.daemon_context.chroot_directory = self.chroot_abspath
+
+        # open the log files
+        self._log_config()
+
+        logger_files = set()
+        # find all open filedescriptors opened for logging
+        if self.log_config:
+            for name, cfg in self.log_config.get("loggers").items():
+                l = logging.getLogger(name)
+                for h in l.handlers:
+                    try:
+                        logger_files.add(h.stream.fileno())
+                    except AttributeError:
+                        # handler doesn't have an open fd
+                        pass
+
+        # preserve open file descriptors used for logging
+        self.daemon_context.files_preserve=list(logger_files)
+
     
     def load_config(self, parser):
         options, args = parser.parse_args(self._args)
@@ -153,7 +179,46 @@ class Runner(daemon.runner.DaemonRunner):
         self._log_config()
         self.service.reload()
 
+    def _expand_service_generators(self, service_gen):
+
+        children = []
+        main_service = None
+
+        if isinstance(service_gen, types.GeneratorType):
+            helpful_exc_message = ("Invalid Generator.  Generators must yield a"
+                                   " series of child dependencies as (name, "
+                                   "service) pairs followed by a final yield "
+                                   "containing only a service.")
+            try:
+                for cur in service_gen:
+                    if isinstance(cur, tuple):
+                        # be very explicit in checking tuples since we need to
+                        # throw the exception *back* into the generator here, to
+                        # make user debugging reasonable
+                        if (len(cur) == 2 and
+                            isinstance(cur[0], str) and
+                            len(cur[0]) and
+                            main_service is None):
+                            children.append(cur)
+                        else:
+                            service_gen.throw(RunnerStartException, helpful_exc_message)
+                    else:
+                        main_service = cur
+            except StopIteration, _:
+                if main_service is None:
+                    raise RunnerStartException(helpful_exc_message)
+        else:
+            main_service = service_gen
+
+        return children, main_service
+
     def run(self):
+        if ('gevent' in sys.modules and
+           not config.Option('_allow_early_gevent_import_for_tests').value):
+            sys.stderr.write("Fatal error: you cannot import gevent in your"
+                             " configuration file.  Aborting.\n")
+            raise SystemExit(1)
+        
         # gevent complains if you import it before you daemonize
         import gevent
         gevent.signal(signal.SIGUSR1, self.do_reload)
@@ -166,15 +231,19 @@ class Runner(daemon.runner.DaemonRunner):
             sys.path.append(os.path.dirname(self.config_path))
             sys.path.append(os.getcwd())
 
-        self._log_config()
-
         if self.proc_name:
             setproctitle.setproctitle(self.proc_name)
 
         if not self.service_factory:
             print "[ERROR] No service factory is defined in configuration"
             sys.exit(88)
-        self.service = self.service_factory()
+        service_gen = self.service_factory()
+
+        children, main_service = self._expand_service_generators(service_gen)
+
+        import gservice.rootservice
+        self.service = gservice.rootservice.RootService(children,
+            main_service)
 
         if hasattr(self.service, 'catch'):
             self.service.catch(SystemExit, lambda e,g: self.service.stop())
@@ -182,7 +251,6 @@ class Runner(daemon.runner.DaemonRunner):
         def shed_privileges():
             if self.uid and self.gid:
                 daemon.daemon.change_process_owner(self.uid, self.gid)
-            
         self.service.serve_forever(ready_callback=shed_privileges)
     
     def terminate(self):
@@ -206,9 +274,9 @@ class Runner(daemon.runner.DaemonRunner):
         print "Starting service..."
         self.run()
     
-    def do_action(self):
+    def do_action(self, *args, **kwargs):
         func = self._get_action_func()
-        getattr(self, func)()
+        getattr(self, func)(*args, **kwargs)
 
     def _open(self, *args, **kwargs):
         return self.__class__.__dict__['_opener'](*args, **kwargs)

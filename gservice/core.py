@@ -7,6 +7,20 @@ from gservice.util import defaultproperty
 
 import functools
 
+"""
+State for global services, see globalservices.py for implementation
+
+Variables are in this file to avoid importing globalservice from service,
+causing the parent for GlobalService to be uninstantiated at class instantiation
+time.
+"""
+_main_services = {}
+
+def _get_main_service(name, dict=_main_services):
+    return dict.get(name, None)
+
+
+
 NOT_READY = 1
 
 def require_ready(func):
@@ -33,11 +47,38 @@ class Service(object):
     ready_timeout = defaultproperty(int, 2)
     started = defaultproperty(bool, False)
     
-    _children = defaultproperty(set)
+    _children = defaultproperty(list)
     _stopped_event = defaultproperty(gevent.event.Event)
     _ready_event = defaultproperty(gevent.event.Event)
     _greenlets = defaultproperty(gevent.pool.Group)
     _error_handlers = defaultproperty(dict)
+
+    @classmethod
+    def register_named_service(cls, name, service, use_dict=_main_services):
+        use_dict[name] = service
+
+    @classmethod
+    def _get_named_service(cls, name, use_dict=_main_services):
+        return _get_main_service(name, use_dict)
+
+    def __new__(cls, *args, **kwargs):
+        """
+        Allow for Service('name') to lookup named global services.
+        """
+        if cls == Service:
+            if 'mock_dict' in kwargs:
+                use_dict = kwargs['mock_dict']
+            else:
+                use_dict = _main_services
+            if 'name' in kwargs:
+                service = cls._get_named_service(kwargs['name'], use_dict)
+                return service
+            else:
+                service = cls._get_named_service(args[0], use_dict)
+                return service
+        else:
+            return super(Service, cls).__new__(cls)
+        
     
     @property
     def ready(self):
@@ -58,7 +99,7 @@ class Service(object):
         """
         if isinstance(service, gevent.baseserver.BaseServer):
             service = ServiceWrapper(service)
-        self._children.add(service)
+        self._children.append(service)
     
     def remove_service(self, service):
         """Remove a child service from this service"""
@@ -118,9 +159,11 @@ class Service(object):
             self.pre_start()
             for child in self._children:
                 if isinstance(child, Service):
-                    child.start(block_until_ready)
+                    if not child.started:
+                        child.start(block_until_ready)
                 elif isinstance(child, gevent.baseserver.BaseServer):
-                    child.start()
+                    if not child.started:
+                        child.start()
             ready = self.do_start()
             if ready == NOT_READY and block_until_ready is True:
                 self._ready_event.wait(self.ready_timeout)
@@ -158,8 +201,11 @@ class Service(object):
         self.started = False
         try:
             self.pre_stop()
-            for child in self._children:
-                child.stop()
+            for child in reversed(self._children):
+                #iterate over children in reverse order, in case dependancies
+                # were implied by the starting order
+                if child.started:
+                    child.stop()
             self.do_stop()
         finally:
             if timeout is None:
