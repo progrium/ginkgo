@@ -3,4 +3,4 @@ layout: default
 title: Test Test
 ---
 
-{% include Test.md | markdownify %}
+{% capture content %}{% include Test.md %}{% endcapture %}{{ content | markdownify }}
