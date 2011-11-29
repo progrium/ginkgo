@@ -139,7 +139,7 @@ def test_service_greenlets():
 
 def test_service_ctor():
     gs = service.Service('test', mock_dict={'test': 1})
-    assert gs == 1
+    assert gs.value == 1
 
 def test_service_ctor_doesnt_fire_in_subclass():
     expected_name = 'hello, world'
@@ -160,4 +160,26 @@ def test_service_register():
 
 def test_service_lookup_named():
     gs = service.Service(name='test', mock_dict=dict(test=1))
-    assert gs == 1
+    assert gs.value == 1
+
+def test_service_lookup_ctor():
+
+    inits = []
+    class Foo(service.Service):
+        
+        def __init__(self, hello, whatever):
+            inits.append(hello)
+            inits.append(whatever)
+
+    mock_dict = {}
+    foo = Foo('hello', 'what')
+    service.Service.register_named_service(name='foo', service=foo, use_dict=mock_dict)
+
+    assert 'foo' in mock_dict
+    gs = service.Service('foo', mock_dict=mock_dict)
+    print mock_dict
+    print "looked up", gs, gs.value
+    assert gs is not None
+    assert isinstance(gs.value, Foo)
+    assert inits == ['hello', 'what']
+    print inits
