@@ -18,7 +18,6 @@ def require_ready(func):
 
 class NamedService(object):
     def __init__(self, name, use_dict):
-        print "ctor namedService", name, use_dict
         self.name = name
         self.use_dict = use_dict
 
