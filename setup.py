@@ -39,7 +39,7 @@ setup(
     version='0.3.0',
     author='Jeff Lindsay',
     author_email='jeff.lindsay@twilio.com',
-    description='gevent related goodies',
+    description='Lightweight service framework',
     packages=find_packages(),
     install_requires=['gevent==0.13.3', 'setproctitle', 'nose', 'python-daemon',],
     data_files=[],
