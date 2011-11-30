@@ -36,7 +36,7 @@ class CoverageCommand(GToolsCommand):
 
 setup(
     name='gservice',
-    version='0.2.0',
+    version='0.3.0',
     author='Jeff Lindsay',
     author_email='jeff.lindsay@twilio.com',
     description='gevent related goodies',
