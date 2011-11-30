@@ -7,20 +7,6 @@ from gservice.util import defaultproperty
 
 import functools
 
-"""
-State for global services, see globalservices.py for implementation
-
-Variables are in this file to avoid importing globalservice from service,
-causing the parent for GlobalService to be uninstantiated at class instantiation
-time.
-"""
-_main_services = {}
-
-def _get_main_service(name, dict=_main_services):
-    return dict.get(name, None)
-
-
-
 NOT_READY = 1
 
 def require_ready(func):
@@ -29,6 +15,30 @@ def require_ready(func):
         assert args[0].ready, "Service must be ready to call this method."
         func(*args, **kwargs)
     return wrapped
+
+class NamedService(object):
+    def __init__(self, name, use_dict):
+        self.name = name
+        self.use_dict = use_dict
+
+    def __get__(self, instance, owner):
+        return self.value
+
+    def __set__(self, instance, value):
+        self.value = value
+
+    @property
+    def value(self):
+        return Service._get_named_service(self.name, self.use_dict)
+
+    @value.setter
+    def setvalue(self, value):
+        Service.register_named_service(self.name, value, self.use_dict)
+
+    def __str__(self):
+        return str(self.value)
+        
+                
 
 class Service(object):
     """Service base class for creating standalone or composable services
@@ -53,13 +63,16 @@ class Service(object):
     _greenlets = defaultproperty(gevent.pool.Group)
     _error_handlers = defaultproperty(dict)
 
+    # main services dictionary for looking up named services
+    _main_services = {}
+
     @classmethod
     def register_named_service(cls, name, service, use_dict=_main_services):
         use_dict[name] = service
 
     @classmethod
     def _get_named_service(cls, name, use_dict=_main_services):
-        return _get_main_service(name, use_dict)
+        return use_dict.get(name, None)
 
     def __new__(cls, *args, **kwargs):
         """
@@ -69,16 +82,15 @@ class Service(object):
             if 'mock_dict' in kwargs:
                 use_dict = kwargs['mock_dict']
             else:
-                use_dict = _main_services
+                use_dict = Service._main_services
+
             if 'name' in kwargs:
-                service = cls._get_named_service(kwargs['name'], use_dict)
-                return service
+                name = kwargs['name']
             else:
-                service = cls._get_named_service(args[0], use_dict)
-                return service
+                name = args[0]
+            return NamedService(name, use_dict=use_dict)
         else:
             return super(Service, cls).__new__(cls)
-        
     
     @property
     def ready(self):
@@ -172,6 +184,9 @@ class Service(object):
             self.started = True
             self.post_start()
         except:
+            #stop may raise, print the current exception before trying
+            import traceback
+            traceback.print_exc()
             self.stop()
             raise
     
@@ -245,6 +260,10 @@ class Service(object):
         try:
             self._stopped_event.wait()
         except:
+            #stop may raise, print the current exception before trying
+            import traceback
+            traceback.print_exc()
+
             self.stop(timeout=stop_timeout)
             raise
     

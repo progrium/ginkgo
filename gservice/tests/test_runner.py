@@ -327,4 +327,4 @@ def test_named_global_services():
 
     assert expected['main'] == ['start', 'stop']
 
-    assert lookup['foo'] is None
+    assert lookup['foo'].value is None
