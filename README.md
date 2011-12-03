@@ -6,7 +6,7 @@ Lightweight service framework on top of gevent, implementing the "service model"
 
 Fork, write code+tests, pass tests, send pull request.
 
-We highly recommend using branches for all features / issues and then squashing it into a single commit in your master before issuing a pull request. It's actually quite easy [using merge/reset](http://j.mp/vHLUoa).
+We highly recommend using branches for all features / issues and then squashing it into a single commit in your master before issuing a pull request. It's actually quite easy using [merge and reset](http://j.mp/vHLUoa).
 
 ## Authors
 

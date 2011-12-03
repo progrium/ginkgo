@@ -2,9 +2,7 @@ from datetime import timedelta, datetime
 from itertools import cycle
 import os
 
-pidfile = 'cron.pid'
-logfile = 'demo.log'
-name = 'cron daemon'
+from gservice.core import Service
 
 # example generators for rescheduling tasks
 # currently there isn't any like real cron format
@@ -24,30 +22,19 @@ def every_fib():
         a, b = (a + b), a
         yield timedelta(seconds=b)
 
-def service():
-    """Required service function"""
-    # It's important to know you MUST make any imports that
-    # use gevent to happen INSIDE this function
-    from gservice.core import Service
+class Cron(Service):
+    def schedule(self, timer, func, *args, **kwargs):
+        def job():
+            self.spawn(func, *args, **kwargs)
+            try:
+                time = timer.next()
+                self.spawn_later(time.total_seconds(), job)
+            except StopIteration:
+                pass
+        job()
 
-    class CronService(Service):
 
-        def do_start(self):
-            self.spawn(self.run)
-
-        def schedule(self, timer, func, *args, **kwargs):
-            def job():
-                self.spawn(func, *args, **kwargs)
-                try:
-                    time = timer.next()
-                    self.spawn_later(time.total_seconds(), job)
-                except StopIteration:
-                    pass
-            job()
-
-        def run(self):
-            print 'wutup'
-
+if __name__ == '__main__':
     # lame example methods for croning
     def message(string):
         print(string)
@@ -56,9 +43,9 @@ def service():
         import urllib2
         print(urllib2.urlopen(url, data).read())
 
-    cs = CronService()
+    cs = Cron()
     cs.schedule(every(seconds=10), message, "Every 10 seconds")
-    cs.schedule(every(seconds=30), poke_website, url="http://google.com", data="q=gevent")
+    cs.schedule(every(seconds=30), poke_website, url="http://yahoo.com", data="q=gevent")
     cs.schedule(cycle_every((1,2,1,0.3)), message, "Testing cycle")
     cs.schedule(every_fib(), message, "fib")
-    return cs
+    cs.serve_forever()
