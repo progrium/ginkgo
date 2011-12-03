@@ -12,7 +12,8 @@ NOT_READY = 1
 def require_ready(func):
     @functools.wraps(func)
     def wrapped(*args, **kwargs):
-        assert args[0].ready, "Service must be ready to call this method."
+        if not args[0].ready:
+            raise RuntimeWarning("Service must be ready to call this method.")
         func(*args, **kwargs)
     return wrapped
 
@@ -164,7 +165,9 @@ class Service(object):
     
     def start(self, block_until_ready=True):
         """Public interface for starting this service and children. By default it blocks until ready."""
-        assert not self.started, '%s already started' % self.__class__.__name__
+        if self.started:
+            raise RuntimeWarning("{} already started".format(
+                self.__class__.__name__))
         self._stopped_event.clear()
         self._ready_event.clear()
         try:

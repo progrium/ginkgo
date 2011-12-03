@@ -328,3 +328,26 @@ def test_named_global_services():
     assert expected['main'] == ['start', 'stop']
 
     assert lookup['foo'].value is None
+
+def test_gservice_core_require_ready():
+    from gservice.core import require_ready
+
+    class test_class(object):
+        ready = False
+
+        @require_ready
+        def not_ready():
+            pass
+
+    nose.tools.assert_raises(RuntimeWarning,
+                             test_class().not_ready)
+
+def test_Service_already_started():
+    from gservice.core import Service
+
+    class test_service(Service):
+        pass
+
+    s = test_service()
+    s.start()
+    nose.tools.assert_raises(RuntimeWarning, s.start)
