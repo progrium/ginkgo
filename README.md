@@ -1,6 +1,6 @@
 # gservice
 
-Lightweight service framework, implementing the "service model" -- services all the way down. 
+Lightweight service framework on top of gevent, implementing the "service model" -- services all the way down. 
 
 ## Contributing
 
@@ -10,10 +10,10 @@ We highly recommend using branches for all features / issues and then squashing 
 
 ## Authors
 
- * Jeff Lindsay <jeff.lindsay@twilio.com>
- * Sean McQuillan <sean@twilio.com>
- * Alan Shreve <ashreve@twilio.com>
- * Chad Selph <chad@twilio.com>
+ * [Jeff Lindsay](jeff.lindsay@twilio.com)
+ * [Sean McQuillan](sean@twilio.com)
+ * [Alan Shreve](ashreve@twilio.com)
+ * [Chad Selph](chad@twilio.com)
 
 ## License
 
