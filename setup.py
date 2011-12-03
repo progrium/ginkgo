@@ -3,36 +3,35 @@ import os
 from setuptools import Command
 from setuptools import setup, find_packages
 
-def shell(cmdline):
-    args = cmdline.split(' ')
-    os.execlp(args[0], *args)
+def command(fn):
+    def wrapped():
+        class cmdclass(Command):
+            def initialize_options(self): pass
+            def finalize_options(self): pass
+            user_options = []
+            description = fn.__doc__
+            def run(self): fn()
+        return cmdclass
+    return wrapped
 
-class GToolsCommand(Command):
-    def initialize_options(self): pass
-    def finalize_options(self): pass
-    user_options = []
+@command    
+def test():
+    """run tests with nose"""
+    os.execlp("nosetests", "nosetests")
 
-class TestCommand(GToolsCommand):
-    description = "run tests with nose"
-    
-    def run(self):
-        shell("nosetests")
+@command
+def build_pages():
+    """rebuild the website"""
+    os.execlp("bash", "bash", "-c", """branch=$(git status | grep 'On branch' | cut -f 4 -d ' ')
+        git checkout gh-pages && 
+        git commit --allow-empty -m 'trigger pages rebuild' && 
+        git push origin gh-pages && 
+        git checkout $branch""")
 
-class BuildPagesCommand(GToolsCommand):
-    description = "rebuild the website"
-    
-    def run(self):
-        os.execlp("bash", "bash", "-c", """branch=$(git status | grep 'On branch' | cut -f 4 -d ' ')
-            git checkout gh-pages && 
-            git commit --allow-empty -m 'trigger pages rebuild' && 
-            git push origin gh-pages && 
-            git checkout $branch""")
-
-class CoverageCommand(GToolsCommand):
-    description = "run test coverage report with nose"
-    
-    def run(self):
-        shell("nosetests --with-coverage --cover-package=gservice")
+@command
+def coverage():
+    """run test coverage report with nose"""
+    os.execlp("nosetests", "nosetests", "--with-coverage", "--cover-package=gservice")
 
 setup(
     name='gservice',
@@ -47,7 +46,7 @@ setup(
         'console_scripts': [
             'gservice = gservice.runner:main',]},
     cmdclass={
-        'test': TestCommand,
-        'coverage': CoverageCommand,
-        'build_pages': BuildPagesCommand,}
+        'test': test(),
+        'coverage': coverage(),
+        'build_pages': build_pages(),}
 )
