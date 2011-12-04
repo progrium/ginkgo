@@ -1,4 +1,5 @@
 import gevent
+import gevent.event
 import nose.tools
 
 from gservice.tests import silencer
@@ -334,6 +335,9 @@ def test_gservice_core_require_ready():
 
     class test_class(object):
         ready = False
+        _ready_event = gevent.event.Event()
+        ready_timeout = 1
+        _ready_event.set()
 
         @require_ready
         def not_ready():
@@ -341,6 +345,49 @@ def test_gservice_core_require_ready():
 
     nose.tools.assert_raises(RuntimeWarning,
                              test_class().not_ready)
+
+def test_gservice_core_require_ready_timeout():
+    from gservice.core import require_ready
+    
+    class test_class(object):
+        ready = False
+        _ready_event = gevent.event.Event()
+        ready_timeout = 0.0001
+
+        _ready_event.clear()
+
+        @require_ready
+        def not_ready():
+            pass
+
+    nose.tools.assert_raises(RuntimeWarning,
+                             test_class().not_ready)
+
+
+
+def test_gservice_core_require_ready_timeout():
+    from gservice.core import require_ready
+
+    called = []
+    
+    class test_class(object):
+        ready = False
+        _ready_event = gevent.event.Event()
+        ready_timeout = None
+
+        def set_ready(self):
+            self.ready = True
+            self._ready_event.set()
+
+        @require_ready
+        def will_be_ready(self):
+            called.append(1)
+
+    inst = test_class()
+    gevent.spawn_later(0.1, inst.set_ready)
+    inst.will_be_ready()
+
+    assert called == [1], "will_be_ready was called"
 
 def test_Service_already_started():
     from gservice.core import Service
