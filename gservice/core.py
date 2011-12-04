@@ -1,6 +1,7 @@
 import gevent
 import gevent.baseserver
 import gevent.event
+import gevent.timeout
 import gevent.pool
 import gevent.util
 from gservice.util import defaultproperty
@@ -11,10 +12,14 @@ NOT_READY = 1
 
 def require_ready(func):
     @functools.wraps(func)
-    def wrapped(*args, **kwargs):
-        if not args[0].ready:
+    def wrapped(self, *args, **kwargs):
+        try:
+            self._ready_event.wait(self.ready_timeout)
+        except gevent.timeout.Timeout, e:
+            pass
+        if not self.ready:
             raise RuntimeWarning("Service must be ready to call this method.")
-        func(*args, **kwargs)
+        return func(self, *args, **kwargs)
     return wrapped
 
 class NamedService(object):
