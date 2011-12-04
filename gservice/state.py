@@ -41,36 +41,59 @@ class ServiceStateManager(object):
     def __call__(self, event):
         trigger = "event_{}".format(event)
         if hasattr(self, trigger):
-            getattr(self, trigger)()
+            success, state = getattr(self, trigger)()
+            if success:
+                self._transition(state)
+            else:
+                raise RuntimeWarning("Service unable to enter '{}' in current
+                        state".format(state))
         else:
             raise AttributeError("No event '{}'".format(event))
 
     # Event triggers
 
     def event_start_services(self):
+        new_state = "starting:services"
         if self.state in ["init", "stopped"]:
             self._callback("pre_start")
-            self._transition("starting:services")
+            return True, new_state
+        else:
+            return False, new_state
 
     def event_services_started(self):
+        new_state = "starting"
         if self.state in ["starting:services"]:
-            self._transition("starting")
+            return True, new_state
+        else:
+            return False, new_state
 
     def event_ready(self):
+        new_state = "ready"
         if self.state in ["starting"]:
             self._callback("post_start")
-            self._transition("ready")
+            return True, new_state
+        else:
+            return False, new_state
 
     def event_stop_services(self):
+        new_state = "stopping:services"
         if self.state in ["ready", "starting:services", "starting"]:
             self._callback("pre_stop")
-            self._transition("stopping:services")
+            return True, new_state
+        else:
+            return False, new_state
 
     def event_services_stopped(self):
+        new_state = "stopping"
         if self.state in ["stopping:services"]:
-            self._transition("stopping")
+            return True, new_state
+        else:
+            return False, new_state
 
     def event_stopped(self):
+        new_state = "stopped"
         if self.state in ["stopping", "stopping:services"]:
             self._callback("post_stop")
-            self._transition("stopped")
+            return True, new_state
+        else:
+            return False, new_state
