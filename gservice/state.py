@@ -38,6 +38,10 @@ class ServiceStateManager(object):
     def wait(self, state, timeout=None):
         self._events[state].wait(timeout)
 
+    @property
+    def current(self):
+        return self.state
+
     def __call__(self, event):
         trigger = "event_{}".format(event)
         if hasattr(self, trigger):
