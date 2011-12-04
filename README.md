@@ -13,7 +13,7 @@ Feel free to poke around the issues in the main repository and see if you can ta
 * Squash branch commits using [merge and reset](http://j.mp/vHLUoa)
 * Send pull request
 
-We highly recommend using branches for all features / issues and then squashing it into a single commit in your master before issuing a pull request. It's actually quite easy using [merge and reset](http://j.mp/vHLUoa).
+We highly recommend using branches for all features / issues and then squashing it into a single commit in your master before issuing a pull request. It's actually quite easy using [merge and reset](http://j.mp/vHLUoa). This helps keep features and issues consolidated, but also makes pull requests easier to read, which increases the speed and likelihood of being accepted.
 
 We're aiming for at least 90% test coverage. If you have the `coverage` Python package installed, you can run `python setup.py coverage` to get a coverage report of modules within gservice.
 
@@ -23,6 +23,7 @@ We're aiming for at least 90% test coverage. If you have the `coverage` Python p
  * [Sean McQuillan](sean@twilio.com)
  * [Alan Shreve](ashreve@twilio.com)
  * [Chad Selph](chad@twilio.com)
+ * [Ryan Larrabure](ryan@twilio.com)
 
 ## License
 
