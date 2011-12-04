@@ -10,14 +10,14 @@ def teardown():
 @with_setup(setup, teardown)
 def test_basic_load_and_read_from_option():
     class Foo(object):
-        bar = config.Option('bar')
+        bar = config.Setting('bar')
     config.load(dict(bar='foo'))
     assert Foo.bar == 'foo', "Option value not set properly"
 
 @with_setup(setup, teardown)
 def test_configuration_namespaces():
     class Foo(object):
-        bar = config.Option('foo.bar')
+        bar = config.Setting('foo.bar')
     config.load(dict(
         foo = config.Namespace(
             bar = 'foo')
@@ -27,7 +27,7 @@ def test_configuration_namespaces():
 @with_setup(setup, teardown)
 def test_value_changed():
     class Foo(object):
-        bar = config.Option('bar')
+        bar = config.Setting('bar')
     config.load(dict(bar='bar'))
     assert config.changed(Foo, 'bar'), "Value should have changed after initial load"
     assert not config.changed(Foo, 'bar'), "Value should not have changed after initial check"
@@ -39,7 +39,7 @@ def test_value_changed():
 @with_setup(setup, teardown)
 def test_cannot_set_option():
     class Foo(object):
-        bar = config.Option('bar')
+        bar = config.Setting('bar')
     #config.load(dict(bar='bar'))
     #Foo.bar = 'woefijwefo'
     #print Foo.bar

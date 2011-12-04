@@ -4,7 +4,7 @@ from gevent.server import StreamServer
 from gevent.socket import create_connection
 
 from gservice.core import Service
-from gservice.config import Option
+from gservice.config import Setting
 
 class TcpClient(Service):
     def __init__(self, address, handler):
@@ -15,9 +15,9 @@ class TcpClient(Service):
         self.spawn(self.handler, self.address)
 
 class MyApplication(Service):
-    http_port = Option('http_port')
-    tcp_port = Option('tcp_port')
-    connect_address = Option('connect_address')
+    http_port = Setting('http_port')
+    tcp_port = Setting('tcp_port')
+    connect_address = Setting('connect_address')
     
     def __init__(self):
         self.add_service(WSGIServer(('127.0.0.1', self.http_port), self.handle_http))

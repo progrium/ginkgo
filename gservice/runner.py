@@ -49,13 +49,13 @@ class Runner(daemon.runner.DaemonRunner):
     _args = sys.argv[1:]
     _opener = io.open
     
-    logfile_path =      config.Option('logfile')
-    pidfile_path =      config.Option('pidfile')
-    proc_name =         config.Option('name')
-    service_factory =   config.Option('service')
-    chroot_path =       config.Option('chroot')
-    user =              config.Option('user')
-    log_config =        config.Option('log_config')
+    logfile_path =      config.Setting('logfile')
+    pidfile_path =      config.Setting('pidfile')
+    proc_name =         config.Setting('name')
+    service_factory =   config.Setting('service')
+    chroot_path =       config.Setting('chroot')
+    user =              config.Setting('user')
+    log_config =        config.Setting('log_config')
     
     def __init__(self):
         self.action_funcs = {
@@ -205,7 +205,7 @@ class Runner(daemon.runner.DaemonRunner):
 
     def run(self):
         if ('gevent' in sys.modules and
-           not config.Option('_allow_early_gevent_import_for_tests').value):
+           not config.Setting('_allow_early_gevent_import_for_tests').value):
             sys.stderr.write("Fatal error: you cannot import gevent in your"
                              " configuration file.  Aborting.\n")
             raise SystemExit(1)
