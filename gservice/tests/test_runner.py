@@ -38,10 +38,10 @@ def test_runner_no_daemonize():
 
 def test_read_config_option():
     from gservice.runner import Runner
-    from gservice.config import Option
+    from gservice.config import Setting
 
     class ConfigCheckRunner(Runner):
-        foo = Option('foo')
+        foo = Setting('foo')
         def run(self):
             assert self.foo == 'bar'
 
@@ -69,10 +69,10 @@ def test_command_line_override_config():
 
 def test_extend_file_config_option():
     from gservice.runner import Runner
-    from gservice.config import Option
+    from gservice.config import Setting
 
     class ConfigCheckRunner(Runner):
-        foo = Option('foo')
+        foo = Setting('foo')
         def run(self):
             assert self.foo == 'bar2'
 
@@ -85,10 +85,10 @@ def test_extend_file_config_option():
 
 def test_extend_file_config_option():
     from gservice.runner import Runner
-    from gservice.config import Option
+    from gservice.config import Setting
 
     class ConfigCheckRunner(Runner):
-        foo = Option('foo')
+        foo = Setting('foo')
         def run(self):
             assert self.foo == 'bar2'
 
