@@ -192,9 +192,6 @@ class Service(object):
             self.started = True
             self.post_start()
         except:
-            #stop may raise, print the current exception before trying
-            import traceback
-            traceback.print_exc()
             self.stop()
             raise
     
@@ -268,10 +265,6 @@ class Service(object):
         try:
             self._stopped_event.wait()
         except:
-            #stop may raise, print the current exception before trying
-            import traceback
-            traceback.print_exc()
-
             self.stop(timeout=stop_timeout)
             raise
     
