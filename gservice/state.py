@@ -15,89 +15,96 @@ def psuedo_code_example():
             # your service code will just call self.state("ready")
             # when ready. this replaces self.set_ready()
 
-class ServiceStateManager(object):
-    def __init__(self, service):
-        self.state = "init"
-        self._service = service
-        self._events = {
-            "ready": Event(),
-            "stopped": Event(),
-        }
+class AbstractStateMachine(object):
+    event_class = Event()
 
-    def _callback(self, name):
-        if hasattr(self._service, name):
-            getattr(self._service, name)()
-
-    def _transition(self, new_state):
-        for state in self._events:
-            self._events[state].clear()
-        self.state = new_state
-        if new_state in self._events:
-            self._events[new_state].set()
-
-    def wait(self, state, timeout=None):
-        self._events[state].wait(timeout)
+    def __init__(self, subject):
+        self._state = self.initial_state
+        self._subject = subject
+        self._waitables = {}
+        for state in self.allow_wait:
+            self._waitables[state] = self.event_class()
 
     @property
     def current(self):
-        return self.state
+        return self._state
+
+    def wait(self, state, timeout=None):
+        if state in self._waitables:
+            self._waitables[state].wait(timeout)
+        else:
+            raise RuntimeWarning("Unable to wait for state '{}'".format(state))
 
     def __call__(self, event):
-        trigger = "event_{}".format(event)
-        if hasattr(self, trigger):
-            success, state = getattr(self, trigger)()
-            if success:
-                self._transition(state)
-            else:
-                raise RuntimeWarning("Service unable to enter '{}' in current
-                        state".format(state))
+        from_states, to_state, callback = self._lookup_event(event)
+        if self._state in from_states:
+            self._callback(callback)
+            self._transition(to_state)
         else:
-            raise AttributeError("No event '{}'".format(event))
+            raise RuntimeWarning(
+                "Unable to enter '{}' in current state".format(state))
 
-    # Event triggers
-
-    def event_start_services(self):
-        new_state = "starting:services"
-        if self.state in ["init", "stopped"]:
-            self._callback("pre_start")
-            return True, new_state
+    def _lookup_event(self, event):
+        event_definition = "event_{}".format(event)
+        if hasattr(self, event_definition):
+            return getattr(self, event_definition)
         else:
-            return False, new_state
+            raise AttributeError("No event '{}' on {}".format(event, self))
 
-    def event_services_started(self):
-        new_state = "starting"
-        if self.state in ["starting:services"]:
-            return True, new_state
-        else:
-            return False, new_state
+    def _callback(self, name):
+        if name is not None and hasattr(self._subject, name):
+            getattr(self._subject, name)()
 
-    def event_ready(self):
-        new_state = "ready"
-        if self.state in ["starting"]:
-            self._callback("post_start")
-            return True, new_state
-        else:
-            return False, new_state
+    def _transition(self, new_state):
+        for state in self._waitables:
+            self._waitables[state].clear()
+        self._state = new_state
+        if new_state in self._waitables:
+            self._waitables[new_state].set()
 
-    def event_stop_services(self):
-        new_state = "stopping:services"
-        if self.state in ["ready", "starting:services", "starting"]:
-            self._callback("pre_stop")
-            return True, new_state
-        else:
-            return False, new_state
+class ServiceStateMachine(AbstractStateMachine):
+    """     +------+
+            | init |
+            +--+---+
+               |
+               v
+      +-------------------+
+ +--->|  start_services() |
+ |    |-------------------|        +-------------------+
+ |    | starting:services +---+--->|  stop_services()  |
+ |    +-------------------+   |    |-------------------|
+ |             |              |    | stopping:services +---+
+ |             v              |    +-------------------+   |
+ |    +-------------------+   |              |             |
+ |    | services_started()|   |              v             |
+ |    |-------------------|   |    +-------------------+   |
+ |    |     starting      +---+    | services_stopped()|   |
+ |    +-------------------+   |    |-------------------|   |
+ |             |              |    |     stopping      |   |
+ |             v              |    +-------------------+   |
+ |        +-----------+       |              |             |
+ |        |  ready()  |       |              |             |
+ |        |-----------|       |              v             |
+ |        |   ready   +-------+       +-------------+      |
+ |        +-----------+               |  stopped()  |<-----+
+ |                                    |-------------|
+ +------------------------------------+   stopped   |
+                                      +-------------+
 
-    def event_services_stopped(self):
-        new_state = "stopping"
-        if self.state in ["stopping:services"]:
-            return True, new_state
-        else:
-            return False, new_state
+    http://www.asciiflow.com/#7278337222084818599/1920677602
+    """
+    initial_state = "init"
+    allow_wait = ["ready", "stopped"]
+    event_start_services = \
+        ["init", "stopped"], "starting:services", "pre_start"
+    event_services_started = \
+        ["starting:services"], "starting", None
+    event_ready = \
+        ["starting"], "ready", "post_start"
+    event_stop_services = \
+        ["ready", "starting:services", "starting"], "stopping:services", "pre_stop"
+    event_services_stopped = \
+        ["stopping:services"], "stopping", None
+    event_stopped = \
+        ["stopping", "stopping:services"], "stopped", "post_stop"
 
-    def event_stopped(self):
-        new_state = "stopped"
-        if self.state in ["stopping", "stopping:services"]:
-            self._callback("post_stop")
-            return True, new_state
-        else:
-            return False, new_state
