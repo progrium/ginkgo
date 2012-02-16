@@ -11,6 +11,7 @@ import functools
 NOT_READY = 1
 
 def require_ready(func):
+    """ Decorator that blocks the call until the service is ready """
     @functools.wraps(func)
     def wrapped(self, *args, **kwargs):
         try:
@@ -20,6 +21,13 @@ def require_ready(func):
         if not self.ready:
             raise RuntimeWarning("Service must be ready to call this method.")
         return func(self, *args, **kwargs)
+    return wrapped
+
+def autospawn(func):
+    """ Decorator that will spawn the call in a local greenlet """
+    @functools.wraps(func)
+    def wrapped(self, *args, **kwargs):
+        self.spawn(func, self, *args, **kwargs)
     return wrapped
 
 class NamedService(object):
