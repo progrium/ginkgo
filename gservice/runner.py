@@ -6,6 +6,7 @@ import types
 import signal
 import logging.config
 import pwd
+import logging
 
 import setproctitle
 import daemon
@@ -15,6 +16,8 @@ import daemon.runner
 from gservice import config
 
 class RunnerStartException(Exception): pass
+
+logger = logging.getLogger(__name__)
 
 def main():
     """Entry point for serviced console script"""
@@ -167,6 +170,7 @@ class Runner(daemon.runner.DaemonRunner):
             logging.config.dictConfig(self.log_config)
             
     def do_reload(self):
+        logger.info("Received reload signal")
         self._log_config()
         self.service.reload()
 
@@ -229,6 +233,7 @@ class Runner(daemon.runner.DaemonRunner):
             print "[ERROR] No service factory is defined in configuration"
             sys.exit(88)
         service_gen = self.service_factory()
+        logger.info("Starting service...")
 
         children, main_service = self._expand_service_generators(service_gen)
 
@@ -262,7 +267,6 @@ class Runner(daemon.runner.DaemonRunner):
         super(Runner, self)._start()
 
     def _run(self):
-        print "Starting service..."
         self.run()
     
     def do_action(self, *args, **kwargs):
