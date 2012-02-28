@@ -6,6 +6,8 @@ gservice.egg-info
 *.pid
 .coverage
 
+
+.DS_Store
 *.py[co]
 
 # Packages

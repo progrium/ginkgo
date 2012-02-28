@@ -4,6 +4,7 @@ from setuptools import Command
 from setuptools import setup, find_packages
 
 def command(fn):
+    """decorator for easily making setuptools commands"""
     def wrapped():
         class cmdclass(Command):
             def initialize_options(self): pass
@@ -14,7 +15,7 @@ def command(fn):
         return cmdclass
     return wrapped
 
-@command    
+@command
 def test():
     """run tests with nose"""
     os.execlp("nosetests", "nosetests")
