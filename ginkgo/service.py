@@ -1,0 +1,49 @@
+from util import defaultproperty
+
+from core import BasicService
+from core import ServiceStateMachine
+
+from async import AsyncManager
+
+class ContainerStateMachine(ServiceStateMachine):
+    allow_wait = ["ready", "stopped", "start"]
+    event_start = \
+        ["init", "stopped"], "starting", "pre_start"
+    event_started = \
+        ["starting"], "starting:services", None
+    event_ready = \
+        ["starting:services"], "ready", "post_start"
+
+class Container(BasicService):
+    _statemachine_class = ContainerStateMachine
+
+    def start(self, block_until_ready=True):
+        """Starts this service and then children. By default it blocks until ready."""
+        self.state("start")
+        started = not self.do_start()
+        if not started and block_until_ready is True:
+            self.state.wait("starting:services", self.start_timeout)
+        elif ready:
+            self.state("started")
+        for child in self._children:
+            if child.state.current not in ["ready", "starting", "starting:services"]:
+                child.start(block_until_ready)
+        self.state("ready")
+
+class Service(BasicService):
+    _async_class = AsyncManager
+
+    async = defaultproperty(
+            lambda i: i._async_class(), pass_instance=True)
+
+    def pre_start(self):
+        super(Service, self).pre_start()
+        self.add_service(self.async)
+
+    def spawn(self, *args, **kwargs):
+        return self.async.spawn(*args, **kwargs)
+
+    def spawn_later(self, *args, **kwargs):
+        return self.async.spawn_later(*args, **kwargs)
+
+
