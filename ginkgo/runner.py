@@ -25,13 +25,13 @@ def main():
 
 def runner_options():
     parser = argparse.ArgumentParser()
-    parser.add_argument("-C", "--config", dest="config", metavar="<file>", required=True,
+    parser.add_argument("config", metavar="<config>",
                     help="Path to Python script to configure and return service to run")
     parser.add_argument("-X", "--extend", dest="extensions", metavar="<file/python>", action="append",
                     help="Python code or script path to extend over the config script", default = [])
-    parser.add_argument("-l", "--logfile", dest="logfile", metavar="<logfile>", default="serviced.log",
+    parser.add_argument("-l", "--logfile", dest="logfile", metavar="<logfile>", default="/tmp/serviced.log",
                     help="Log to a specified file, - for stdout (default: serviced.log)")
-    parser.add_argument("-p", "--pidfile", dest="pidfile", metavar="<pidfile>", default="serviced.pid",
+    parser.add_argument("-p", "--pidfile", dest="pidfile", metavar="<pidfile>", default="/tmp/serviced.pid",
                     help="Save pid in specified file (default: serviced.pid)")
     parser.add_argument("-c", "--chroot", dest="chroot", metavar="<chroot>",
                     help="Chroot to a directory before running (default: don't chroot)")
@@ -45,7 +45,8 @@ def runner_options():
     #                help="Name of the process using setprocname. (default: don't change)")
     #parser.add_argument("-m", "--umask", dest="umask", metavar="<mask>",
     #                help="The (octal) file creation mask to apply. (default: 0077 if daemonized)")
-    parser.add_argument("action", choices=["stop", "start", "restart", "run", "reload"], default="run")
+    parser.add_argument("action", choices=[
+        "stop", "start", "restart", "run", "reload"], nargs='?', default="run")
     return parser
 
 class Runner(daemon.runner.DaemonRunner):
