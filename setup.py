@@ -36,7 +36,7 @@ def coverage():
 
 setup(
     name='Ginkgo',
-    version='0.5.0',
+    version='0.5.0dev',
     author='Jeff Lindsay',
     author_email='jeff.lindsay@twilio.com',
     description='Lightweight service framework',
