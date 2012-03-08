@@ -4,7 +4,7 @@ import gevent.event
 import gevent.timeout
 import gevent.pool
 import gevent.util
-from gservice.util import defaultproperty
+from ginkgo.util import defaultproperty
 
 import functools
 

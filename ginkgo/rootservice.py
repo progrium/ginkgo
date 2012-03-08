@@ -1,9 +1,9 @@
-import gservice.core
+import ginkgo.core
 
-class RootService(gservice.core.Service):
+class RootService(ginkgo.core.Service):
     """
     RootService is the main service for all gsevice based daemons.
-    Creation and management of RootService is managed directly by the gservice
+    Creation and management of RootService is managed directly by the ginkgo
     runner.
 
     RootService is the parent service for all named global services, and they
@@ -21,7 +21,7 @@ class RootService(gservice.core.Service):
         self._children = []
         for name, service in children:
             self._children.append(service)
-            gservice.core.Service.register_named_service(name=name,
+            ginkgo.core.Service.register_named_service(name=name,
                 service=service)
         # and append main_service so that it's started last
         self._children.append(main_service)

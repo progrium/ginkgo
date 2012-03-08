@@ -2,25 +2,25 @@ import gevent
 import gevent.event
 import nose.tools
 
-from gservice.tests import silencer
-from gservice.tests import mock_open
+from ginkgo.tests import silencer
+from ginkgo.tests import mock_open
 
 @nose.tools.raises(SystemExit)
 def test_runner_action_required():
-    from gservice.runner import Runner
+    from ginkgo.runner import Runner
     Runner._args = []
     with silencer():
         Runner()
 
 @nose.tools.raises(SystemExit)
 def test_runner_config_required():
-    from gservice.runner import Runner
+    from ginkgo.runner import Runner
     Runner._args = ['start']
     with silencer():
         Runner()
 
 def test_runner_reads_config():
-    from gservice.runner import Runner
+    from ginkgo.runner import Runner
     Runner._args = ['start', '-C', 'config']
     Runner._opener = mock_open({"config": "", "serviced.log": ""})
     with silencer():
@@ -28,7 +28,7 @@ def test_runner_reads_config():
 
 @nose.tools.raises(SystemExit)
 def test_runner_no_daemonize():
-    from gservice.runner import Runner
+    from ginkgo.runner import Runner
     class EmptyRunner(Runner):
         def run(self): pass
     EmptyRunner._args = ['start', '-C', 'config', '-n']
@@ -38,8 +38,8 @@ def test_runner_no_daemonize():
 
 
 def test_read_config_option():
-    from gservice.runner import Runner
-    from gservice.config import Setting
+    from ginkgo.runner import Runner
+    from ginkgo.config import Setting
 
     class ConfigCheckRunner(Runner):
         foo = Setting('foo')
@@ -55,7 +55,7 @@ def test_read_config_option():
 def test_command_line_override_config():
     """ Test that specifying an option on the command line override any
         value set in a config file"""
-    from gservice.runner import Runner
+    from ginkgo.runner import Runner
 
     class ConfigCheckRunner(Runner):
         def run(self):
@@ -69,8 +69,8 @@ def test_command_line_override_config():
 
 
 def test_extend_file_config_option():
-    from gservice.runner import Runner
-    from gservice.config import Setting
+    from ginkgo.runner import Runner
+    from ginkgo.config import Setting
 
     class ConfigCheckRunner(Runner):
         foo = Setting('foo')
@@ -85,8 +85,8 @@ def test_extend_file_config_option():
         ConfigCheckRunner().do_action()
 
 def test_extend_file_config_option():
-    from gservice.runner import Runner
-    from gservice.config import Setting
+    from ginkgo.runner import Runner
+    from ginkgo.config import Setting
 
     class ConfigCheckRunner(Runner):
         foo = Setting('foo')
@@ -101,8 +101,8 @@ def test_extend_file_config_option():
 
 
 def test_privileged_configuration():
-    from gservice.runner import Runner
-    from gservice import config
+    from ginkgo.runner import Runner
+    from ginkgo import config
 
     uids = {}
 
@@ -126,8 +126,8 @@ def test_privileged_configuration():
 
     # capture the uid of the service at start and stop time
     def service():
-        import gservice.core
-        class Service(gservice.core.Service):
+        import ginkgo.core
+        class Service(ginkgo.core.Service):
             def do_start(self):
                 print "asked to do_start"
                 uids['start'] = os.getuid()
@@ -154,8 +154,8 @@ def test_privileged_configuration():
 
 def test_service_generator():
     
-    import gservice.core
-    class MyService(gservice.core.Service): pass
+    import ginkgo.core
+    class MyService(ginkgo.core.Service): pass
 
     expected_children = [('hi', MyService()), ('also named', MyService())]
     expected_main = MyService()
@@ -165,7 +165,7 @@ def test_service_generator():
             yield name, child
         yield expected_main
         
-    from gservice.runner import Runner
+    from ginkgo.runner import Runner
     
     Runner._args = ['run', '-C', 'config', '-u', 'nobody']
     Runner._opener = mock_open({"config": ""})
@@ -181,7 +181,7 @@ def test_service_generator():
     assert main_service == expected_main
 
 def get_runner():
-    from gservice.runner import Runner
+    from ginkgo.runner import Runner
     
     Runner._args = ['run', '-C', 'config', '-u', 'nobody']
     Runner._opener = mock_open({"config": ""})
@@ -190,9 +190,9 @@ def get_runner():
     return runner
 
 def test_invalid_names_throw():
-    import gservice.core
-    from gservice.runner import RunnerStartException
-    class MyService(gservice.core.Service): pass
+    import ginkgo.core
+    from ginkgo.runner import RunnerStartException
+    class MyService(ginkgo.core.Service): pass
 
     def service():
         try:
@@ -207,9 +207,9 @@ def test_invalid_names_throw():
     children, main_service = runner._expand_service_generators(service())    
 
 def test_invalid_name_empty_throw():
-    import gservice.core
-    from gservice.runner import RunnerStartException
-    class MyService(gservice.core.Service): pass
+    import ginkgo.core
+    from ginkgo.runner import RunnerStartException
+    class MyService(ginkgo.core.Service): pass
 
     def service():
         try:
@@ -223,9 +223,9 @@ def test_invalid_name_empty_throw():
     children, main_service = runner._expand_service_generators(service())
 
 def test_invalid_tuple_length_throws():
-    import gservice.core
-    from gservice.runner import RunnerStartException
-    class MyService(gservice.core.Service): pass
+    import ginkgo.core
+    from ginkgo.runner import RunnerStartException
+    class MyService(ginkgo.core.Service): pass
  
     def service():
         try:
@@ -239,9 +239,9 @@ def test_invalid_tuple_length_throws():
     children, main_service = runner._expand_service_generators(service())
 
 def test_setting_main_before_named_throws():
-    import gservice.core
-    from gservice.runner import RunnerStartException
-    class MyService(gservice.core.Service): pass
+    import ginkgo.core
+    from ginkgo.runner import RunnerStartException
+    class MyService(ginkgo.core.Service): pass
 
     def service():
         yield MyService() #set mainservice
@@ -256,7 +256,7 @@ def test_setting_main_before_named_throws():
     children, main_service = runner._expand_service_generators(service())
 
 def test_named_global_services():
-    from gservice import config
+    from ginkgo import config
     from collections import defaultdict
     expected = defaultdict(list)
     lookup = {}
@@ -275,24 +275,24 @@ def test_named_global_services():
     os.setgid = setgid
 
     def service():
-        import gservice.core
-        class MainService(gservice.core.Service):
+        import ginkgo.core
+        class MainService(ginkgo.core.Service):
             def __init__(self, name):
                 self.name = name
                 
             def do_start(self):
                 print "main service starting"
                 gevent.spawn_later(0.1, self.stop)
-                lookup['named'] = gservice.core.Service('named')
-                lookup['named2'] = gservice.core.Service('named2')
-                lookup['foo'] = gservice.core.Service('foo')
+                lookup['named'] = ginkgo.core.Service('named')
+                lookup['named2'] = ginkgo.core.Service('named2')
+                lookup['foo'] = ginkgo.core.Service('foo')
                 expected[self.name].append('start')
             
             def do_stop(self):
                 print "asked to do_stop"
                 expected[self.name].append('stop')
 
-        class GS(gservice.core.Service):
+        class GS(ginkgo.core.Service):
 
             def __init__(self, name):
                 self.name = name
@@ -330,8 +330,8 @@ def test_named_global_services():
 
     assert lookup['foo'].value is None
 
-def test_gservice_core_require_ready():
-    from gservice.core import require_ready
+def test_ginkgo_core_require_ready():
+    from ginkgo.core import require_ready
 
     class test_class(object):
         ready = False
@@ -346,8 +346,8 @@ def test_gservice_core_require_ready():
     nose.tools.assert_raises(RuntimeWarning,
                              test_class().not_ready)
 
-def test_gservice_core_require_ready_timeout():
-    from gservice.core import require_ready
+def test_ginkgo_core_require_ready_timeout():
+    from ginkgo.core import require_ready
     
     class test_class(object):
         ready = False
@@ -365,8 +365,8 @@ def test_gservice_core_require_ready_timeout():
 
 
 
-def test_gservice_core_require_ready_timeout():
-    from gservice.core import require_ready
+def test_ginkgo_core_require_ready_timeout():
+    from ginkgo.core import require_ready
 
     called = []
     
@@ -390,7 +390,7 @@ def test_gservice_core_require_ready_timeout():
     assert called == [1], "will_be_ready was called"
 
 def test_Service_already_started():
-    from gservice.core import Service
+    from ginkgo.core import Service
 
     class test_service(Service):
         pass

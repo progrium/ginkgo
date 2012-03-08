@@ -2,7 +2,7 @@ from nose.tools import with_setup, raises
 
 def _make_class(super):
     # don't use type(), it's hard to read
-    from gservice.util import defaultproperty
+    from ginkgo.util import defaultproperty
     class Foo(super):
         bar = defaultproperty(set)
         

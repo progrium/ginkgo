@@ -8,12 +8,12 @@ import logging.config
 import pwd
 import logging
 
-import setproctitle
+#import setproctitle
 import daemon
 import daemon.daemon
 import daemon.runner
 
-from gservice import config
+from ginkgo import config
 
 class RunnerStartException(Exception): pass
 
@@ -41,8 +41,8 @@ def runner_options():
                     help="The user to run as. (default: don't change)")
     #parser.add_argument("-g", "--group", dest="group", metavar="<group>",
     #                help="The group to run as. (default: don't change)")
-    parser.add_argument("-N", "--name", dest="name", metavar="<name>",
-                    help="Name of the process using setprocname. (default: don't change)")
+    #parser.add_argument("-N", "--name", dest="name", metavar="<name>",
+    #                help="Name of the process using setprocname. (default: don't change)")
     #parser.add_argument("-m", "--umask", dest="umask", metavar="<mask>",
     #                help="The (octal) file creation mask to apply. (default: 0077 if daemonized)")
     parser.add_argument("action", choices=["stop", "start", "restart", "run", "reload"], default="run")
@@ -171,7 +171,7 @@ class Runner(daemon.runner.DaemonRunner):
     def _log_config(self):
         if self.log_config:
             logging.config.dictConfig(self.log_config)
-            
+
     def do_reload(self):
         logger.info("Received reload signal")
         self._log_config()
@@ -230,8 +230,8 @@ class Runner(daemon.runner.DaemonRunner):
             sys.path.append(os.path.dirname(self.config_path))
             sys.path.append(os.getcwd())
 
-        if self.proc_name:
-            setproctitle.setproctitle(self.proc_name)
+        #if self.proc_name:
+        #    setproctitle.setproctitle(self.proc_name)
 
         if not self.service_factory:
             print "[ERROR] No service factory is defined in configuration"
@@ -241,8 +241,8 @@ class Runner(daemon.runner.DaemonRunner):
 
         children, main_service = self._expand_service_generators(service_gen)
 
-        import gservice.rootservice
-        self.service = gservice.rootservice.RootService(children,
+        import ginkgo.rootservice
+        self.service = ginkgo.rootservice.RootService(children,
             main_service)
 
         if hasattr(self.service, 'catch'):

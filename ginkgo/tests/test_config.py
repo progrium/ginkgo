@@ -1,6 +1,6 @@
 from nose.tools import with_setup, raises
 
-from gservice import config
+from ginkgo import config
 
 def setup(): pass
 

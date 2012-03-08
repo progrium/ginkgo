@@ -2,7 +2,7 @@ from datetime import timedelta, datetime
 from itertools import cycle
 import os
 
-from gservice.core import Service
+from ginkgo.core import Service
 
 # example generators for rescheduling tasks
 # currently there isn't any like real cron format

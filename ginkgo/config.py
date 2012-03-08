@@ -40,5 +40,3 @@ class Setting(object):
             self._last_value = self.value
         return has_changed
 
-# Using Option is now deprecated. Use Setting instead
-Option = Setting

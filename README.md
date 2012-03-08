@@ -1,6 +1,15 @@
-# gservice
+# Ginkgo
 
-Lightweight service framework on top of gevent, implementing the "service model" -- services all the way down. 
+Lightweight service framework on top of gevent, implementing the "service model" -- services all the way down.
+
+## Features
+* Service model -- Break your app down into services and sub-services.
+  Modules, if you will, that can start, stop, and reload. Every service
+  manages its own pool of greenlets.
+* Configuration -- Built-in, reloadable configuration based on Python
+  files. Access configuration settings relative to services.
+* Runner -- Command-line tool to manage your service that can daemonize,
+  chroot, drop privs, and set up or override configuration.
 
 ## Contributing
 
@@ -17,7 +26,7 @@ We highly recommend using branches for all features / issues and then squashing 
 
 We're aiming for at least 90% test coverage. If you have the `coverage` Python package installed, you can run `python setup.py coverage` to get a coverage report of modules within gservice.
 
-## Authors
+## Contributors
 
  * [Jeff Lindsay](jeff.lindsay@twilio.com)
  * [Sean McQuillan](sean@twilio.com)

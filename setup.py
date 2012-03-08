@@ -31,20 +31,21 @@ def build_pages():
 @command
 def coverage():
     """run test coverage report with nose"""
-    os.execlp("nosetests", "nosetests", "--with-coverage", "--cover-package=gservice")
+    os.execlp("nosetests", "nosetests", "--with-coverage",
+            "--cover-package=ginkgo")
 
 setup(
-    name='gservice',
-    version='0.3.0',
+    name='Ginkgo',
+    version='0.5.0',
     author='Jeff Lindsay',
     author_email='jeff.lindsay@twilio.com',
     description='Lightweight service framework',
     packages=find_packages(),
-    install_requires=['gevent==0.13.3', 'setproctitle', 'nose', 'python-daemon',],
+    install_requires=['gevent==0.13.3', 'nose', 'python-daemon',],
     data_files=[],
     entry_points={
         'console_scripts': [
-            'gservice = gservice.runner:main',]},
+            'ginkgo = ginkgo.runner:main',]},
     cmdclass={
         'test': test(),
         'coverage': coverage(),

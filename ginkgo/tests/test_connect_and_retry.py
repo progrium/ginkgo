@@ -3,7 +3,7 @@ import gevent.socket
 import gevent.server
 import nose.tools
 
-from gservice import util
+from ginkgo import util
 
 def test_does_connect():
     class SimpleServer(gevent.server.StreamServer):
