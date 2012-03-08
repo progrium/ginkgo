@@ -70,6 +70,7 @@ class Runner(daemon.runner.DaemonRunner):
 
         self.service = None
         self.app = self
+        self.config_path = None
         
         self.load_config(runner_options())
         # horrible hack, daemon tries to remove PID files owned by root
@@ -114,11 +115,13 @@ class Runner(daemon.runner.DaemonRunner):
 
         # preserve open file descriptors used for logging
         self.daemon_context.files_preserve=list(logger_files)
+        if self.config_path:
+            self.daemon_context.files_preserve.append(self.config_path)
 
     
     def load_config(self, parser):
         options = parser.parse_args(self._args)
-        self.config_path = options.config
+        self.config_path = self.config_path or os.path.abspath(options.config)
         
         def load_file(filename):
             f = self._open(filename, 'r')
@@ -126,7 +129,7 @@ class Runner(daemon.runner.DaemonRunner):
             exec f.read() in d,d
             return d
 
-        parser.set_defaults(**load_file(options.config))
+        parser.set_defaults(**load_file(self.config_path))
 
         for ex in options.extensions:
             try:
@@ -172,6 +175,7 @@ class Runner(daemon.runner.DaemonRunner):
     def do_reload(self):
         logger.info("Received reload signal")
         self._log_config()
+        self.load_config(runner_options())
         self.service.reload()
 
     def _expand_service_generators(self, service_gen):
