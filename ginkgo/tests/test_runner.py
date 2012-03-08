@@ -1,3 +1,4 @@
+import os
 import gevent
 import gevent.event
 import nose.tools
@@ -22,7 +23,7 @@ def test_runner_config_required():
 def test_runner_reads_config():
     from ginkgo.runner import Runner
     Runner._args = ['start', '-C', 'config']
-    Runner._opener = mock_open({"config": "", "serviced.log": ""})
+    Runner._opener = mock_open({'{}/config'.format(os.getcwd()): "", "serviced.log": ""})
     with silencer():
         Runner()
 
@@ -32,7 +33,7 @@ def test_runner_no_daemonize():
     class EmptyRunner(Runner):
         def run(self): pass
     EmptyRunner._args = ['start', '-C', 'config', '-n']
-    EmptyRunner._opener = mock_open({"config": "", "serviced.log": "", "serviced.pid": ""})
+    EmptyRunner._opener = mock_open({'{}/config'.format(os.getcwd()): "", "serviced.log": "", "serviced.pid": ""})
     with silencer():
         EmptyRunner()
 
@@ -47,7 +48,7 @@ def test_read_config_option():
             assert self.foo == 'bar'
 
     ConfigCheckRunner._args = ['run', '-C', 'config']
-    ConfigCheckRunner._opener = mock_open({"config": "foo = 'bar'"})
+    ConfigCheckRunner._opener = mock_open({'{}/config'.format(os.getcwd()): "foo = 'bar'"})
 
     with silencer():
         ConfigCheckRunner().do_action()
@@ -62,7 +63,7 @@ def test_command_line_override_config():
             assert self.pidfile_path == 'mypidfile.pid'
 
     ConfigCheckRunner._args = ['run', '-C', 'config', '-p', 'mypidfile.pid']
-    ConfigCheckRunner._opener = mock_open({"config": "pidfile = 'configpidfile.pid'"})
+    ConfigCheckRunner._opener = mock_open({'{}/config'.format(os.getcwd()): "pidfile = 'configpidfile.pid'"})
 
     with silencer():
         ConfigCheckRunner().do_action()
@@ -78,8 +79,8 @@ def test_extend_file_config_option():
             assert self.foo == 'bar2'
 
     ConfigCheckRunner._args = ['run', '-C', 'config1', '-X', 'config2']
-    ConfigCheckRunner._opener = mock_open({"config1": "foo = 'bar1'", 
-                                           "config2": "foo = 'bar2'"})
+    ConfigCheckRunner._opener = mock_open({'{}/config1'.format(os.getcwd()): "foo = 'bar1'", 
+                                           '{}/config2'.format(os.getcwd()): "foo = 'bar2'"})
 
     with silencer():
         ConfigCheckRunner().do_action()
@@ -94,7 +95,7 @@ def test_extend_file_config_option():
             assert self.foo == 'bar2'
 
     ConfigCheckRunner._args = ['run', '-C', 'config1', '-X', "foo = 'bar2'"]
-    ConfigCheckRunner._opener = mock_open({"config1": "foo = 'bar1'"})
+    ConfigCheckRunner._opener = mock_open({'{}/config1'.format(os.getcwd()): "foo = 'bar1'"})
 
     with silencer():
         ConfigCheckRunner().do_action()
@@ -103,11 +104,12 @@ def test_extend_file_config_option():
 def test_privileged_configuration():
     from ginkgo.runner import Runner
     from ginkgo import config
+    import os
 
     uids = {}
 
     Runner._args = ['run', '-C', 'config', '-u', 'nobody']
-    Runner._opener = mock_open({"config": ""})
+    Runner._opener = mock_open({'{}/config'.format(os.getcwd()): ""})
 
     runner = Runner()
 
@@ -168,7 +170,7 @@ def test_service_generator():
     from ginkgo.runner import Runner
     
     Runner._args = ['run', '-C', 'config', '-u', 'nobody']
-    Runner._opener = mock_open({"config": ""})
+    Runner._opener = mock_open({'{}/config'.format(os.getcwd()): ""})
 
     runner = Runner()
     
@@ -184,7 +186,7 @@ def get_runner():
     from ginkgo.runner import Runner
     
     Runner._args = ['run', '-C', 'config', '-u', 'nobody']
-    Runner._opener = mock_open({"config": ""})
+    Runner._opener = mock_open({'{}/config'.format(os.getcwd()): ""})
 
     runner = Runner()
     return runner
