@@ -15,6 +15,7 @@ Lightweight service framework on top of gevent, implementing the "service model"
 
 Pretty active discussion on this early microframework. Join it or just
 read what's being planned:
+
 * [Ginkgo-dev Google Group](http://groups.google.com/group/ginkgo-dev)
 
 ## Contributing
