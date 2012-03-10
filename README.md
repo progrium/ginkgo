@@ -11,6 +11,12 @@ Lightweight service framework on top of gevent, implementing the "service model"
 * Runner -- Command-line tool to manage your service that can daemonize,
   chroot, drop privs, and set up or override configuration.
 
+## Mailing List
+
+Pretty active discussion on this early microframework. Join it or just
+read what's being planned:
+* [Ginkgo-dev Google Group](http://groups.google.com/group/ginkgo-dev)
+
 ## Contributing
 
 Feel free to poke around the issues in the main repository and see if you can tackle any. From there you should:

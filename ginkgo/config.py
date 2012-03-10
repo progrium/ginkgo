@@ -22,16 +22,17 @@ class Setting(object):
         self.default = default
         self.__doc__ = doc
         self._last_value = None
+        self._value = None
     
     def __get__(self, instance, type):
         return self.value
         
     def __set__(self, instance, value):
-        raise AttributeError("can't set attribute")
+        self._value = value
     
     @property
     def value(self):
-        return _registry.get(self.path, self.default)
+        return self._value or _registry.get(self.path, self.default)
     
     @property
     def changed(self):
