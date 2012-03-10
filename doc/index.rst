@@ -12,7 +12,7 @@ gevent-tools is a collection of mini-libraries and utilities built on gevent for
 - :mod:`cluster` A distributed roster manager for clusters for building distributed apps that need to know other hosts available in the cluster.
 - :mod:`util` A couple of utility methods for building network applications in gevent
 
-Buidling services
+Building services
 =================
 
 .. autoclass:: gevent_tools.service.Service
