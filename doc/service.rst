@@ -1,21 +1,21 @@
 Service component
 =================
 
-.. autoclass:: gevent_tools.service.Service
+.. autoclass:: ginkgo.core.Service
    
    .. attribute:: started
    
       This property returns whether this service has been started
    
-   .. autoattribute:: gevent_tools.service.Service.ready
-   .. automethod:: gevent_tools.service.Service._ready
-   .. automethod:: gevent_tools.service.Service.add_service
-   .. automethod:: gevent_tools.service.Service.remove_service
-   .. automethod:: gevent_tools.service.Service._start
-   .. automethod:: gevent_tools.service.Service._stop
-   .. automethod:: gevent_tools.service.Service.start
-   .. automethod:: gevent_tools.service.Service.stop
-   .. automethod:: gevent_tools.service.Service.serve_forever
-   .. automethod:: gevent_tools.service.Service.spawn
-   .. automethod:: gevent_tools.service.Service.spawn_later
-   .. automethod:: gevent_tools.service.Service.catch
+   .. autoattribute:: ginkgo.core.Service.ready
+   .. automethod:: ginkgo.core.Service._ready
+   .. automethod:: ginkgo.core.Service.add_service
+   .. automethod:: ginkgo.core.Service.remove_service
+   .. automethod:: ginkgo.core.Service._start
+   .. automethod:: ginkgo.core.Service._stop
+   .. automethod:: ginkgo.core.Service.start
+   .. automethod:: ginkgo.core.Service.stop
+   .. automethod:: ginkgo.core.Service.serve_forever
+   .. automethod:: ginkgo.core.Service.spawn
+   .. automethod:: ginkgo.core.Service.spawn_later
+   .. automethod:: ginkgo.core.Service.catch
