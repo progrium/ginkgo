@@ -11,6 +11,15 @@ Lightweight service framework on top of gevent, implementing the "service model"
 * Runner -- Command-line tool to manage your service that can daemonize,
   chroot, drop privs, and set up or override configuration.
 
+## Demo
+A talk was given at PyCon 2012 called "Throwing Together Distributed
+Services with gevent" that used Ginkgo to build a number of simple
+services combined to make a more complex distributed service.
+
+* [PyCon 2012 Video](http://pyvideo.org/video/637/throwing-together-distributed-services-with-geven)
+* [PyCon 2012 Slides](http://dl.dropbox.com/u/2096290/GinkgoPyCon.pdf)
+* [Source code used in talk](https://github.com/progrium/ginkgotutorial)
+
 ## Mailing List
 
 Pretty active discussion on this early microframework. Join it or just
