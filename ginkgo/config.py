@@ -2,14 +2,12 @@ import runpy
 from peak.util.proxies import ObjectWrapper
 
 
-class Configuration(object):
+class Config(object):
     """Represents a collection of settings
 
     Provides access to a collection of settings that can be loaded from a
-    Python module or file. It's not intended to be used directly, use the 
-    module-level functions instead unless you need multiple configurations.
-    Loading configuration is the responsibility of a runner that sets up 
-    the `Process`.
+    Python module or file, or a dictionary. It allows classic-style classes to
+    be used to indicate namespaces or groups, which can be nested.
     """
     settings = {}
 
@@ -21,9 +19,9 @@ class Configuration(object):
 
     def set(self, path, value):
         self.settings[self._normalize_path(path)] = value
-            
-    def scope(self, path=''):
-        return Scope(self, path)
+
+    def group(self, path=''):
+        return Group(self, path)
 
     def setting(self, path, default=None, doc=''):
         return Setting(self, path, default, doc)
@@ -51,20 +49,23 @@ class Configuration(object):
         return self.settings
 
 
-class Scope(object):
-    """An object which allows read-only access to configuration data
-    within a particular scope.
-    These objects represent a 'view' into a particular scope of the entire
-    configuration, whether the global namespace or a namespace created 
-    by using classic-style classes in the configuration. They're not 
-    created directly. Use the module-level `scope()` or `Configuration.scope()`.
+class Group(object):
+    """Provides read-only access to a group of config data
 
-        s = scope() # global scope
-        s.foo # gives you the setting named "foo"
+    These objects represent a 'view' into a particular scope of the entire
+    config, whether the global group or a group created using classic-style
+    classes in the config file. They're not created directly. Use the `group()`
+    method on `Config`.
+
+        c = Config()
+        g1 = c.group() # global scope group
+        g1.foo # gives you the setting named "foo"
+        g2 = c.group("bar.baz") # bar.baz scoped group
+        g2.qux # give you the setting named "bar.baz.qux"
 
     They are not intended to be the primary interface to settings. However, in
     some cases it is more convenient. You should usually use the `setting`
-    function to embed configuration for particular values on relevant classes.
+    function to embed config settings for particular values on relevant classes.
     """
     def __init__(self, config, name):
         self._config = config
@@ -75,29 +76,28 @@ class Scope(object):
         try:
             return self._config.settings[path]
         except KeyError:
-            scope_path = path + "."
+            group_path = path + "."
             keys = self._config.settings.keys()
-            if any(1 for k in keys if k.startswith(scope_path)):
-                return Scope(self._config, path)
+            if any(1 for k in keys if k.startswith(group_path)):
+                return Group(self._config, path)
             return None
 
     def __repr__(self):
-        return 'Scope[{}]'.format(self._name)
+        return 'Group[{}]'.format(self._name)
 
 
 class Setting(object):
-    """ Setting descriptor for embedding in component classes.
-    
-    Do not use this object directly, instead use the module-level 
-    setting() or Configuration.setting().
+    """Setting descriptor for embedding in component classes.
+
+    Do not use this object directly, instead use `Config.setting()`.
 
     This is a descriptor for your component classes to define what settings
-    your application uses and provides a way to access that setting. By 
+    your application uses and provides a way to access that setting. By
     accessing with a descriptor, if the configuration changes you
     will always have the current value. Example:
 
         class MyService(Service):
-            foo = setting('foo', default='bar',
+            foo = config.setting('foo', default='bar',
                     doc="This lets us set foo for MyService")
 
             def do_start(self):
@@ -105,7 +105,7 @@ class Setting(object):
     """
     _init = object()
 
-    def __init__(self, config, path, default, doc):
+    def __init__(self, config, path, default=None, doc=''):
         self._last_value = self._init
         self.config = config
         self.path = path
@@ -143,21 +143,22 @@ class SettingProxy(ObjectWrapper):
 
     @property
     def changed(self):
-        return self.descriptor.changed 
+        return self.descriptor.changed
 
 
 if __name__ == '__main__':
-    load({
+    c = Config()
+    c.load({
         "foo": "bar",
         "bar.foo": "qux",
         "bar.boo": "bar",
         "bar.baz.foo": "bar",
         "bar.baz.bar": "bar"})
 
-    assert get("foo") == "bar"
+    assert c.get("foo") == "bar"
 
     class MyClass(object):
-        foo = setting("foo", doc="This is foo.")
+        foo = c.setting("foo", doc="This is foo.")
 
         def override(self):
             self.foo = "qux"
@@ -166,7 +167,7 @@ if __name__ == '__main__':
     assert o.foo == "bar"
     assert o.foo.changed == False
     assert o.foo.changed == False
-    set("foo", "BAZ")
+    c.set("foo", "BAZ")
     assert o.foo.changed == True
     assert o.foo.changed == False
     assert MyClass.foo == "BAZ"
@@ -175,8 +176,8 @@ if __name__ == '__main__':
     assert MyClass.foo == "BAZ"
     assert o.foo == "qux"
 
-    s = scope()
-    assert s.foo == "BAZ"
-    assert s.bar.__class__ == Scope
-    assert s.bar.boo == "bar"
-    assert s.bar.tree == None
+    g = c.group()
+    assert g.foo == "BAZ"
+    assert g.bar.__class__ == Group
+    assert g.bar.boo == "bar"
+    assert g.bar.tree == None
