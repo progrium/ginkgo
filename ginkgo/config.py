@@ -56,7 +56,7 @@ class Configuration(object):
         return self.settings
 
 # Singleton for default configuation
-# TODO: make it a thread-local
+# Accessed by ginkgo.settings
 _default_config = Configuration()
 
 
