@@ -23,7 +23,8 @@ def test():
 @command
 def build_pages():
     """rebuild the website"""
-    os.execlp("bash", "bash", "-c", """branch=$(git status | grep 'On branch' | cut -f 4 -d ' ')
+    os.execlp("bash", "bash", "-c", """\
+        branch=$(git status | grep 'On branch' | cut -f 4 -d ' ')
         git checkout gh-pages && 
         git commit --allow-empty -m 'trigger pages rebuild' && 
         git push origin gh-pages && 
@@ -32,20 +33,24 @@ def build_pages():
 @command
 def coverage():
     """run test coverage report with nose"""
-    os.execlp("nosetests", "nosetests", "--with-coverage", "--cover-package=gservice")
+    os.execlp("nosetests", "nosetests",
+            "--with-coverage", "--cover-package=ginkgo")
+
+from ginkgo import __version__
 
 setup(
-    name='gservice',
-    version='0.3.0',
+    name='Ginkgo',
+    version=__version__,
     author='Jeff Lindsay',
     author_email='jeff.lindsay@twilio.com',
     description='Lightweight service framework',
     packages=find_packages(),
-    install_requires=['gevent==0.13.3', 'setproctitle', 'nose', 'python-daemon',],
+    install_requires=['gevent==0.13.3', 'nose',],
     data_files=[],
     entry_points={
         'console_scripts': [
-            'gservice = gservice.runner:main',]},
+            'ginkgo = ginkgo.cli:run_ginkgo',
+            'ginkgoctl = ginkgo.cli:run_ginkgoctl']},
     cmdclass={
         'test': test(),
         'coverage': coverage(),

@@ -50,10 +50,10 @@ class Configuration(object):
         _load(config_dict)
         return self.settings
 
+
 class Scope(object):
     """An object which allows read-only access to configuration data
-       within a particular scope.
-
+    within a particular scope.
     These objects represent a 'view' into a particular scope of the entire
     configuration, whether the global namespace or a namespace created 
     by using classic-style classes in the configuration. They're not 

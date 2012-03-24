@@ -1,9 +1,31 @@
+import functools
+
 from util import defaultproperty
 
 from core import BasicService
 from core import ServiceStateMachine
 
 from async import AsyncManager
+
+def require_ready(func):
+    """ Decorator that blocks the call until the service is ready """
+    @functools.wraps(func)
+    def wrapped(self, *args, **kwargs):
+        try:
+            self.state.wait("ready", self.ready_timeout)
+        except Exception, e:
+            pass
+        if not self.ready:
+            raise RuntimeWarning("Service must be ready to call this method.")
+        return func(self, *args, **kwargs)
+    return wrapped
+
+def autospawn(func):
+    """ Decorator that will spawn the call in a local greenlet """
+    @functools.wraps(func)
+    def wrapped(self, *args, **kwargs):
+        self.spawn(func, self, *args, **kwargs)
+    return wrapped
 
 class ContainerStateMachine(ServiceStateMachine):
     allow_wait = ["ready", "stopped", "start"]
@@ -45,5 +67,4 @@ class Service(BasicService):
 
     def spawn_later(self, *args, **kwargs):
         return self.async.spawn_later(*args, **kwargs)
-
 
