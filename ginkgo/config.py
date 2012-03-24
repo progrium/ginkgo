@@ -146,18 +146,6 @@ class SettingProxy(ObjectWrapper):
         return self.descriptor.changed 
 
 
-# Singleton for default configuation
-# TODO: make it a thread-local
-_default_config = Configuration()
-scope = _default_config.scope
-setting = _default_config.setting
-load_module = _default_config.load_module
-load_file = _default_config.load_file
-load = _default_config.load
-get = _default_config.get
-set = _default_config.set
-    
-
 if __name__ == '__main__':
     load({
         "foo": "bar",
