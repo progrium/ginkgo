@@ -22,9 +22,9 @@ class defaultproperty(object):
                 if value == self:
                     if 'pass_instance' in self.kwargs:
                         del self.kwargs['pass_instance']
-                        self.args.insert(instance, 0)
+                        self.args = (instance,) + self.args
                     newval = self.default_factory(*self.args, **self.kwargs)
-                    instance.__dict__[key] =newval
+                    instance.__dict__[key] = newval
                     return newval
 
 class AbstractStateMachine(object):
@@ -56,7 +56,7 @@ class AbstractStateMachine(object):
             self._transition(to_state)
         else:
             raise RuntimeWarning(
-                "Unable to enter '{}' in current state".format(state))
+                "Unable to enter '{}' in current state".format(to_state))
 
     def _lookup_event(self, event):
         event_definition = "event_{}".format(event)
