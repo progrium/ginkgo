@@ -20,9 +20,6 @@ class defaultproperty(object):
         for kls in owner.__mro__:
             for key, value in kls.__dict__.iteritems():
                 if value == self:
-                    if 'pass_instance' in self.kwargs:
-                        del self.kwargs['pass_instance']
-                        self.args = (instance,) + self.args
                     newval = self.default_factory(*self.args, **self.kwargs)
                     instance.__dict__[key] = newval
                     return newval

@@ -52,8 +52,11 @@ class BasicService(object):
     _children = defaultproperty(list)
 
     start_timeout = defaultproperty(int, 2)
-    state = defaultproperty(
-            lambda i: i._statemachine_class(i), pass_instance=True)
+
+    def __new__(cls, *args, **kwargs):
+        s = super(BasicService, cls).__new__(cls, *args, **kwargs)
+        s.state = cls._statemachine_class(s)
+        return s
 
     @property
     def ready(self):

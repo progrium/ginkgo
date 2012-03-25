@@ -45,7 +45,7 @@ class Container(BasicService):
         started = not self.do_start()
         if not started and block_until_ready is True:
             self.state.wait("starting:services", self.start_timeout)
-        elif ready:
+        elif started:
             self.state("started")
         for child in self._children:
             if child.state.current not in ["ready", "starting", "starting:services"]:
@@ -55,12 +55,11 @@ class Container(BasicService):
 class Service(BasicService):
     _async_class = AsyncManager
 
-    async = defaultproperty(
-            lambda i: i._async_class(), pass_instance=True)
-
-    def pre_start(self):
-        super(Service, self).pre_start()
-        self.add_service(self.async)
+    def __new__(cls, *args, **kwargs):
+        s = super(Service, cls).__new__(cls, *args, **kwargs)
+        s.async = cls._async_class()
+        s.add_service(s.async)
+        return s
 
     def spawn(self, *args, **kwargs):
         return self.async.spawn(*args, **kwargs)
