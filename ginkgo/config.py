@@ -1,3 +1,4 @@
+import os.path
 import runpy
 from peak.util.proxies import ObjectWrapper
 
@@ -9,28 +10,38 @@ class Config(object):
     Python module or file, or a dictionary. It allows classic-style classes to
     be used to indicate namespaces or groups, which can be nested.
     """
-    settings = {}
+    _settings = {}
+    _descriptors = []
+    _last_file = None
 
     def _normalize_path(self, path):
         return path.lower().lstrip(".")
 
     def get(self, path, default=None):
-        return self.settings.get(self._normalize_path(path), default)
+        return self._settings.get(self._normalize_path(path), default)
 
     def set(self, path, value):
-        self.settings[self._normalize_path(path)] = value
+        self._settings[self._normalize_path(path)] = value
 
     def group(self, path=''):
         return Group(self, path)
 
-    def setting(self, path, default=None, doc=''):
-        return Setting(self, path, default, doc)
+    def setting(self, *args, **kwargs):
+        descriptor = Setting(self, *args, **kwargs)
+        self._descriptors.append(descriptor)
+        return descriptor
 
     def load_module(self, module_path):
         return self.load(runpy.run_module(module_path))
 
     def load_file(self, file_path):
-        return self.load(runpy.run_path(file_path))
+        file_path = os.path.abspath(os.path.expanduser(file_path))
+        config_dict = runpy.run_path(file_path)
+        self._last_file = file_path
+        return self.load(config_dict)
+
+    def reload_file(self):
+        return self.load_file(self._last_file)
 
     def load(self, config_dict):
         def _load(d, prefix=''):
@@ -46,7 +57,13 @@ class Config(object):
                 else:
                     self.set(path, value)
         _load(config_dict)
-        return self.settings
+        return self._settings
+
+    def print_help(self):
+        print "config settings:"
+        for d in sorted(self._descriptors, key=lambda d: d.path):
+            if d.help:
+                print "  %- 14s %s [%s]" % (d.path, d.help, d.default)
 
 
 class Group(object):
@@ -74,10 +91,10 @@ class Group(object):
     def __getattr__(self, name):
         path = self._config._normalize_path(".".join((self._name, name)))
         try:
-            return self._config.settings[path]
+            return self._config._settings[path]
         except KeyError:
             group_path = path + "."
-            keys = self._config.settings.keys()
+            keys = self._config._settings.keys()
             if any(1 for k in keys if k.startswith(group_path)):
                 return Group(self._config, path)
             return None
@@ -98,19 +115,19 @@ class Setting(object):
 
         class MyService(Service):
             foo = config.setting('foo', default='bar',
-                    doc="This lets us set foo for MyService")
+                    help="This lets us set foo for MyService")
 
             def do_start(self):
                 print self.foo
     """
     _init = object()
 
-    def __init__(self, config, path, default=None, doc=''):
+    def __init__(self, config, path, default=None, help=''):
         self._last_value = self._init
         self.config = config
         self.path = path
         self.default = default
-        self.__doc__ = doc
+        self.help = self.__doc__ = help
 
     def __get__(self, instance, type):
         return SettingProxy(self.value, self)
