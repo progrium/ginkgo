@@ -37,7 +37,7 @@ gevent.joinall(greenlets)
 
 
 #===
-# Now you need gservice, or write your own:
+# Now you need ginkgo, or write your own:
 # * Organization with Services
 # * Daemonizing (easy, right?)
 # * Daemon options/infrastructure (chroot, privs, pidfile, logfile)

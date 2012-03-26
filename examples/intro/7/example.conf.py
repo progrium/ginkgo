@@ -10,10 +10,10 @@ def service():
     from example import MyApplication
     return MyApplication()
 
-# $ gservice -C example.conf.py run
-# $ gservice -C example.conf.py start
-# $ gservice -C example.conf.py restart
-# $ gservice -C example.conf.py stop
-# $ gservice -C example.conf.py --logfile example2.log start
-# $ gservice -C example.conf.py stop
-# $ gservice --help
+# $ ginkgo -C example.conf.py run
+# $ ginkgo -C example.conf.py start
+# $ ginkgo -C example.conf.py restart
+# $ ginkgo -C example.conf.py stop
+# $ ginkgo -C example.conf.py --logfile example2.log start
+# $ ginkgo -C example.conf.py stop
+# $ ginkgo --help
