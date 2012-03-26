@@ -53,8 +53,12 @@ class BasicService(object):
 
     start_timeout = defaultproperty(int, 2)
 
+    def pre_init(self):
+        pass
+
     def __new__(cls, *args, **kwargs):
         s = super(BasicService, cls).__new__(cls, *args, **kwargs)
+        s.pre_init()
         s.state = cls._statemachine_class(s)
         return s
 
@@ -138,12 +142,19 @@ class BasicService(object):
         """Start the service if it hasn't been already started and wait until it's stopped."""
         try:
             self.start()
-        except RuntimeWarning:
+        except RuntimeWarning, e:
             # If it can't start because it's
             # already started, just move on
             pass
         if ready_callback is not None:
             ready_callback()
+
+        # This is done to recursively get services to wait on stopped.
+        # Services based on BasicService will not wait because they
+        # have no async manager and assume no event loop or threads.
+        for child in self._children:
+            child.serve_forever()
+
         self.state.wait("stopped")
 
     def __enter__(self):

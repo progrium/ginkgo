@@ -24,8 +24,13 @@ class defaultproperty(object):
                     instance.__dict__[key] = newval
                     return newval
 
+class PassthroughEvent(object):
+    def wait(self, timeout=None): return
+    def set(self): return
+    def clear(self): return
+
 class AbstractStateMachine(object):
-    event_class = Event
+    event_class = PassthroughEvent
 
     def __init__(self, subject):
         self._state = self.initial_state

@@ -55,11 +55,9 @@ class Container(BasicService):
 class Service(BasicService):
     _async_class = AsyncManager
 
-    def __new__(cls, *args, **kwargs):
-        s = super(Service, cls).__new__(cls, *args, **kwargs)
-        s.async = cls._async_class()
-        s.add_service(s.async)
-        return s
+    def pre_init(self):
+        self.async = self._async_class()
+        self.add_service(self.async)
 
     def spawn(self, *args, **kwargs):
         return self.async.spawn(*args, **kwargs)

@@ -1,8 +1,8 @@
 
-from ginkgo import Service
+from ginkgo import Service as _Service
 from ginkgo import Setting
 
-class MyService(Service):
+class MyService(_Service):
     foo = Setting("foo", default=("foo", 12), help="This is foo")
     bar = Setting("bar", help="This is bar")
 
@@ -11,5 +11,8 @@ class MyService(Service):
         self.spawn(self.loop)
 
     def loop(self):
-        print "hello"
-        self.async.sleep(1)
+        while True:
+            print "hello"
+            self.async.sleep(1)
+
+service = MyService
