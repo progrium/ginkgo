@@ -62,7 +62,7 @@ def run_ginkgo():
             parser.print_usage()
 
 def run_ginkgoctl():
-    pass
+    pass # TODO
 
 class Process(Container):
     daemonize = ginkgo.Setting("daemonize", default=False)
@@ -84,7 +84,10 @@ class Process(Container):
         gevent.signal(signal.SIGHUP, self.reload)
         gevent.signal(signal.SIGTERM, self.stop)
 
+        # TODO: use all those settings
+
     def do_stop(self):
+        pass
 
     def __enter__(self):
         ginkgo._push_process(self)
