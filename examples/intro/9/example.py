@@ -3,8 +3,8 @@ from gevent.pywsgi import WSGIServer
 from gevent.server import StreamServer
 from gevent.socket import create_connection
 
-from gservice.core import Service
-from gservice.config import Setting
+from ginkgo.core import Service
+from ginkgo.config import Setting
 
 class TcpClient(Service):
     def __init__(self, address, handler):
