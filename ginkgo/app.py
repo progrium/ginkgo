@@ -51,6 +51,7 @@ def run_ginkgo():
     if args.help:
         parser.print_help()
         if args.target:
+            print # blank line
             app = prepare_app(args.target)
             app.config.print_help()
     else:
@@ -79,13 +80,11 @@ class Process(Container):
 
     def do_start(self):
         import gevent
+        # TODO: upgrade to gevent 1.0 and use standard signal
         gevent.signal(signal.SIGHUP, self.reload)
         gevent.signal(signal.SIGTERM, self.stop)
 
-        print "Starting"
-
     def do_stop(self):
-        print "stopping"
 
     def __enter__(self):
         ginkgo._push_process(self)
