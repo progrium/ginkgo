@@ -13,4 +13,4 @@ def service():
     from example import MyApplication
     return MyApplication()
 
-# $ gservice -C example.conf.py -X 'http_port = 7070'
+# $ ginkgo -C example.conf.py -X 'http_port = 7070'
