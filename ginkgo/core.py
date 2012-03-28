@@ -51,7 +51,7 @@ class BasicService(object):
     _statemachine_class = ServiceStateMachine
     _children = defaultproperty(list)
 
-    start_timeout = defaultproperty(int, 2)
+    start_timeout = defaultproperty(int, 2) 
 
     def pre_init(self):
         pass
@@ -61,6 +61,10 @@ class BasicService(object):
         s.pre_init()
         s.state = cls._statemachine_class(s)
         return s
+
+    @property
+    def service_name(self):
+        return self.__class__.__name__
 
     @property
     def ready(self):
@@ -110,6 +114,8 @@ class BasicService(object):
 
     def stop(self):
         """Stop child services in reverse order and then this service"""
+        if self.state.current in ["init", "stopped"]:
+            return
         ready_before_stop = self.ready
         self.state("stop_services")
         for child in reversed(self._children):

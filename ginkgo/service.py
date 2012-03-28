@@ -36,7 +36,7 @@ class ContainerStateMachine(ServiceStateMachine):
     event_ready = \
         ["starting:services"], "ready", "post_start"
 
-class Container(BasicService):
+class ContainerService(BasicService):
     _statemachine_class = ContainerStateMachine
 
     def start(self, block_until_ready=True):

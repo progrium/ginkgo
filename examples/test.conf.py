@@ -1,6 +1,7 @@
-
 from ginkgo import Service as _Service
 from ginkgo import Setting
+
+daemon = True
 
 class MyService(_Service):
     foo = Setting("foo", default=("foo", 12), help="This is foo")

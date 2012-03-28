@@ -59,11 +59,13 @@ class Config(object):
         _load(config_dict)
         return self._settings
 
-    def print_help(self):
+    def print_help(self, only_default=False):
         print "config settings:"
         for d in sorted(self._descriptors, key=lambda d: d.path):
             if d.help:
-                print "  %- 14s %s [%s]" % (d.path, d.help, d.default)
+                value = d.default if only_default else self.get(d.path,
+                                                                d.default)
+                print "  %- 14s %s [%s]" % (d.path, d.help, value)
 
 
 class Group(object):
@@ -122,15 +124,19 @@ class Setting(object):
     """
     _init = object()
 
-    def __init__(self, config, path, default=None, help=''):
+    def __init__(self, config, path, default=None, monitored=False, help=''):
         self._last_value = self._init
         self.config = config
         self.path = path
         self.default = default
+        self.monitored = monitored
         self.help = self.__doc__ = help
 
     def __get__(self, instance, type):
-        return SettingProxy(self.value, self)
+        if self.monitored:
+            return SettingProxy(self.value, self)
+        else:
+            return self.value
 
     @property
     def value(self):
@@ -161,6 +167,10 @@ class SettingProxy(ObjectWrapper):
     @property
     def changed(self):
         return self.descriptor.changed
+
+    @property
+    def value(self):
+        return self.__subject__
 
 
 if __name__ == '__main__':
