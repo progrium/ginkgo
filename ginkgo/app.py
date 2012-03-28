@@ -73,7 +73,7 @@ def run_ginkgoctl():
 def resolve_pid(pid=None, target=None):
     if pid and not os.path.exists(pid):
         return int(pid)
-    if target and os.path.exists(target):
+    if target is not None:
         prepare_app(target)
         pid = ginkgo.settings.get("pidfile")
     if pid is not None:
