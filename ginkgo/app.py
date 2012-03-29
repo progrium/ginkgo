@@ -8,7 +8,7 @@ import logging
 
 import ginkgo
 import ginkgo.util
-from ginkgo.service import ContainerService, Service
+from ginkgo.core import ContainerService, Service
 
 STOP_SIGNAL = signal.SIGTERM
 RELOAD_SIGNAL = signal.SIGHUP

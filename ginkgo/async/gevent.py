@@ -1,16 +1,21 @@
+from __future__ import absolute_import
+
 import gevent
 import gevent.event
 import gevent.queue
 import gevent.timeout
 import gevent.pool
 
-from core import BasicService
+from ..core import BasicService
 
 class AsyncManager(BasicService):
     """Starting with just gevent"""
 
     def __init__(self):
         self._greenlets = gevent.pool.Group()
+
+    def do_stop(self):
+        pass # TODO: Kill greenlets
 
     def spawn(self, func, *args, **kwargs):
         """Spawn a greenlet under this service"""
