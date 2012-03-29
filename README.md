@@ -1,4 +1,4 @@
-# gservice
+# Ginkgo
 
 Lightweight service framework on top of gevent, implementing the "service model" -- services all the way down. 
 
