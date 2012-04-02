@@ -40,7 +40,7 @@ from ginkgo import __version__
 
 setup(
     name='Ginkgo',
-    version=__version__,
+    version=__version__+"dev",
     author='Jeff Lindsay',
     author_email='jeff.lindsay@twilio.com',
     description='Lightweight service framework',
