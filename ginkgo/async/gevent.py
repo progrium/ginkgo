@@ -7,7 +7,7 @@ import gevent.timeout
 import gevent.pool
 import gevent.baseserver
 
-from ..core import BasicService
+from ..core import BasicService, Service
 from ..util import defaultproperty
 
 class AsyncManager(BasicService):

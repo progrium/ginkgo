@@ -2,7 +2,6 @@ import os.path
 import runpy
 from peak.util.proxies import ObjectWrapper
 
-
 class Config(object):
     """Represents a collection of settings
 
@@ -27,7 +26,7 @@ class Config(object):
         return Group(self, path)
 
     def setting(self, *args, **kwargs):
-        descriptor = Setting(self, *args, **kwargs)
+        descriptor = _Setting(self, *args, **kwargs)
         self._descriptors.append(descriptor)
         return descriptor
 
@@ -105,7 +104,7 @@ class Group(object):
         return 'Group[{}]'.format(self._name)
 
 
-class Setting(object):
+class _Setting(object):
     """Setting descriptor for embedding in component classes.
 
     Do not use this object directly, instead use `Config.setting()`.

@@ -1,0 +1,32 @@
+
+ *  Change imports of `ginkgo.config.Setting` to `ginkgo.Setting`
+ *  Change imports of `ginkgo.core.Service` to `ginkgo.Service`
+ *  Use `.ready` instead of `.started` on Service objects
+ *  The `doc` named argument of Setting is now `help`
+ *  If you access settings outside of classes like this:
+
+      Setting("setting").value
+
+    Then you should just import ginkgo and do this:
+
+      ginkgo.settings.get("setting")
+
+ *  If you use any gevent-based server (based on baseserver,
+    StreamServer, etc), you need to explicitly wrap it when adding
+    to a service using ginkgo.async.gevent.ServerWrapper. For
+    example, this code:
+
+      from gevent.server import StreamServer
+      class MyService(Service):
+        def __init__(self):
+          self.server = StreamServer(...)
+          self.add_service(self.server)
+
+    Would need to become:
+
+      from gevent.server import StreamServer
+      from ginkgo.async.gevent import ServerWrapper
+      class MyService(Service):
+        def __init__(self):
+          self.server = StreamServer(...)
+          self.add_service(ServerWrapper(self.server))
