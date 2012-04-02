@@ -90,10 +90,14 @@ def load_class(class_path):
         raise RuntimeError("Invalid class path")
     module_name, class_name = class_path.rsplit('.', 1)
     try:
-        module = runpy.run_module(module_name)
+        try:
+            module = runpy.run_module(module_name)
+        except ImportError:
+            module = runpy.run_module(module_name + ".__init__")
         return module[class_name]
-    except (ImportError, KeyError):
-        raise RuntimeError("Unable to find class path")
+    except (ImportError, KeyError), e:
+        raise RuntimeError("Unable to load class path: {}:\n{}".format(
+            class_path, e))
 
 def prepare_app(target):
     if os.path.exists(target):
@@ -215,10 +219,10 @@ class Process(ContainerService):
             self.pid = os.getpid()
             self.pidfile.create(self.pid)
 
-        # TODO: placeholder for logs
-        f = open("/tmp/test.log", "w", buffering=0)
-        os.dup2(f.fileno(), sys.stderr.fileno())
-        os.dup2(f.fileno(), sys.stdout.fileno())
+            # TODO: placeholder for logs
+            f = open("/tmp/test.log", "w", buffering=0)
+            os.dup2(f.fileno(), sys.stderr.fileno())
+            os.dup2(f.fileno(), sys.stdout.fileno())
 
         # TODO: move this to async manager?
         import gevent
