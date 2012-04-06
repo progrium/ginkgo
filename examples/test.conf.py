@@ -1,5 +1,7 @@
+import logging
 from ginkgo import Service as _Service
 from ginkgo import Setting
+
 
 #daemon = True
 delay = 1
@@ -9,16 +11,20 @@ class MyService(_Service):
     bar = Setting("bar", help="This is bar")
     delay = Setting("delay", default=1, help="Delay between hello printing")
 
+    def __init__(self):
+        import logging
+        self.log = logging.getLogger(__name__)
+
     def do_start(self):
-        print "Hello here"
+        self.log.info("Hello here")
         self.spawn(self.loop)
 
     def do_reload(self):
-        print "reloaded!"
+        self.log.info("reloaded!")
 
     def loop(self):
         while True:
-            print "hello"
+            self.log.info("hello")
             self.async.sleep(self.delay)
 
 service = MyService

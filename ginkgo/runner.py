@@ -1,4 +1,5 @@
 import argparse
+import logging
 import os
 import os.path
 import runpy
@@ -11,6 +12,8 @@ import ginkgo.util
 
 STOP_SIGNAL = signal.SIGTERM
 RELOAD_SIGNAL = signal.SIGHUP
+
+logger = logging.getLogger(__name__)
 
 def run_ginkgo():
     parser = argparse.ArgumentParser(prog="ginkgo", add_help=False)
@@ -54,14 +57,13 @@ def run_ginkgoctl():
         configuration file path to use (/path/to/config.py)
         """.strip())
     parser.add_argument("action",
-        choices=["start", "stop", "restart", "reload", "status", "log",
-        "logtail"])
+        choices="start stop restart reload status log logtail".split())
     args = parser.parse_args()
     if args.pid and args.target:
         parser.error("You cannot specify both a target and a pid")
     ginkgo.settings.set("daemon", True)
     try:
-        if args.action in ["start", "restart", "log", "logtail"]:
+        if args.action in "start restart log logtail".split():
             if not args.target:
                 parser.error("You need to specify a target for {}".format(args.action))
             getattr(ControlInterface(), args.action)(args.target)
@@ -146,6 +148,13 @@ class ControlInterface(object):
         if self._validate(pid):
             print "Process is running as {}.".format(pid)
 
+    def _validate(self, pid):
+        try:
+            os.kill(pid, 0)
+            return pid
+        except (OSError, TypeError):
+            print "Process is NOT running."
+
     def log(self, target):
         app = prepare_app(target)
         app.logger.print_log()
@@ -156,13 +165,6 @@ class ControlInterface(object):
             app.logger.tail_log()
         except KeyboardInterrupt:
             pass
-
-    def _validate(self, pid):
-        try:
-            os.kill(pid, 0)
-            return pid
-        except (OSError, TypeError):
-            print "Process is NOT running."
 
 class Process(ginkgo.core.ContainerService):
     daemon = ginkgo.Setting("daemon", default=False, help="""
@@ -246,7 +248,7 @@ class Process(ginkgo.core.ContainerService):
         # TODO: use all those settings
 
     def do_stop(self):
-        print "Stopping."
+        logger.info("Stopping.")
         self.logger.close()
         if self.daemon:
             self.pidfile.unlink()

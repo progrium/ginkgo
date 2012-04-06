@@ -1,3 +1,4 @@
+import logging
 import os
 
 import ginkgo
@@ -6,11 +7,20 @@ class Logger(object):
     logfile = ginkgo.Setting("logfile", default=None, help="""
         Path to primary logfile
         """.strip())
+    config = ginkgo.Setting("logconfig", default=None, help="""
+        Basic configuration of standard Python logger
+        """.strip())
 
     def __init__(self, process):
         if self.logfile is None:
             process.config.set("logfile",
                     "/tmp/{}.log".format(process.app.service_name))
+
+        if self.config is None:
+            process.config.set("logconfig", dict(
+                    format="%(asctime)s %(levelname) 7s %(module)s: %(message)s",
+                    level=logging.DEBUG))
+        logging.basicConfig(**self.config)
 
         #self.file = open(self.logfile, "w", buffering=0)
 
