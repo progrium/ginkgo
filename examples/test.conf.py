@@ -1,7 +1,7 @@
 from ginkgo import Service as _Service
 from ginkgo import Setting
 
-daemon = True
+#daemon = True
 delay = 1
 
 class MyService(_Service):
