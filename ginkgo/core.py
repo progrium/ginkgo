@@ -31,24 +31,17 @@ class ServiceStateMachine(AbstractStateMachine):
                |
                v
       +-------------------+
- +--->|  start_services() |
+ +--->|      start()      |
  |    |-------------------|        +-------------------+
- |    | starting:services +---+--->|  stop_services()  |
+ |    |     starting      +---+--->|      stop()       |
  |    +-------------------+   |    |-------------------|
- |             |              |    | stopping:services +---+
- |             v              |    +-------------------+   |
- |    +-------------------+   |              |             |
- |    |      start()      |   |              v             |
- |    |-------------------|   |    +-------------------+   |
- |    |     starting      +---+    |      stop()       |   |
- |    +-------------------+   |    |-------------------|   |
- |             |              |    |     stopping      |   |
- |             v              |    +-------------------+   |
- |        +-----------+       |              |             |
- |        |  ready()  |       |              |             |
- |        |-----------|       |              v             |
- |        |   ready   +-------+       +-------------+      |
- |        +-----------+               |  stopped()  |<-----+
+ |             |              |    |     stopping      |
+ |             v              |    +-------------------+
+ |        +-----------+       |              |
+ |        |  ready()  |       |              |
+ |        |-----------|       |              v
+ |        |   ready   +-------+       +-------------+
+ |        +-----------+               |  stopped()  |
  |                                    |-------------|
  +------------------------------------+   stopped   |
                                       +-------------+
@@ -57,33 +50,21 @@ class ServiceStateMachine(AbstractStateMachine):
     """
     initial_state = "init"
     allow_wait = ["ready", "stopped"]
-    event_start_services = \
-        ["init", "stopped"], "starting:services", "pre_start"
-    event_start = \
-        ["starting:services"], "starting", None
-    event_ready = \
-        ["starting"], "ready", "post_start"
-    event_stop_services = \
-        ["ready", "starting:services", "starting"], "stopping:services", "pre_stop"
-    event_stop = \
-        ["stopping:services"], "stopping", None
-    event_stopped = \
-        ["stopping", "stopping:services"], "stopped", "post_stop"
-
-class ContainerStateMachine(ServiceStateMachine):
-    allow_wait = ["ready", "stopped", "start"]
     event_start = \
         ["init", "stopped"], "starting", "pre_start"
-    event_started = \
-        ["starting"], "starting:services", None
     event_ready = \
-        ["starting:services"], "ready", "post_start"
+        ["starting"], "ready", "post_start"
+    event_stop = \
+        ["ready", "starting"], "stopping", "pre_stop"
+    event_stopped = \
+        ["stopping"], "stopped", "post_stop"
 
 class BasicService(object):
     _statemachine_class = ServiceStateMachine
     _children = defaultproperty(list)
 
-    start_timeout = defaultproperty(int, 2) 
+    start_timeout = defaultproperty(int, 2)
+    start_before = defaultproperty(bool, False)
 
     def pre_init(self):
         pass
@@ -118,15 +99,19 @@ class BasicService(object):
 
     def start(self, block_until_ready=True):
         """Starts children and then this service. By default it blocks until ready."""
-        self.state("start_services")
-        for child in self._children:
-            if child.state.current not in ["ready", "starting", "starting:services"]:
-                child.start(block_until_ready)
         self.state("start")
-        ready = not self.do_start()
-        if not ready and block_until_ready is True:
-            self.state.wait("ready", self.start_timeout)
-        elif ready:
+        if self.start_before:
+            self.do_start()
+        for child in self._children:
+            if child.state.current not in ["ready", "starting"]:
+                child.start(block_until_ready)
+        if not self.start_before:
+            ready = not self.do_start()
+            if not ready and block_until_ready is True:
+                self.state.wait("ready", self.start_timeout)
+            elif ready:
+                self.state("ready")
+        else:
             self.state("ready")
 
     def pre_start(self):
@@ -149,11 +134,10 @@ class BasicService(object):
         if self.state.current in ["init", "stopped"]:
             return
         ready_before_stop = self.ready
-        self.state("stop_services")
+        self.state("stop")
         for child in reversed(self._children):
             child.stop()
         if ready_before_stop:
-            self.state("stop")
             self.do_stop()
         self.state("stopped")
 
@@ -199,23 +183,6 @@ class BasicService(object):
 
     def __exit__(self, type, value, traceback):
         self.stop()
-
-
-class ContainerService(BasicService):
-    _statemachine_class = ContainerStateMachine
-
-    def start(self, block_until_ready=True):
-        """Starts this service and then children. By default it blocks until ready."""
-        self.state("start")
-        started = not self.do_start()
-        if not started and block_until_ready is True:
-            self.state.wait("starting:services", self.start_timeout)
-        elif started:
-            self.state("started")
-        for child in self._children:
-            if child.state.current not in ["ready", "starting", "starting:services"]:
-                child.start(block_until_ready)
-        self.state("ready")
 
 
 class Service(BasicService):

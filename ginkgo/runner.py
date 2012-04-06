@@ -151,7 +151,9 @@ class ControlInterface(object):
         except (OSError, TypeError):
             print "Process is NOT running."
 
-class Process(ginkgo.core.ContainerService):
+class Process(ginkgo.core.Service):
+    start_before = True
+
     daemon = ginkgo.Setting("daemon", default=False, help="""
         True or False whether to daemonize
         """.strip())
