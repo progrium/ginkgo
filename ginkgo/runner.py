@@ -1,14 +1,12 @@
 import argparse
-import sys
-import runpy
 import os
 import os.path
+import runpy
 import signal
-import logging
+import sys
 
-import ginkgo
+import ginkgo.core
 import ginkgo.util
-from ginkgo.core import ContainerService, Service
 
 STOP_SIGNAL = signal.SIGTERM
 RELOAD_SIGNAL = signal.SIGHUP
@@ -153,7 +151,7 @@ class ControlInterface(object):
         except (OSError, TypeError):
             print "Process is NOT running."
 
-class Process(ContainerService):
+class Process(ginkgo.core.ContainerService):
     daemon = ginkgo.Setting("daemon", default=False, help="""
         True or False whether to daemonize
         """.strip())

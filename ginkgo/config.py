@@ -1,6 +1,6 @@
 import os.path
+import peak.util.proxies
 import runpy
-from peak.util.proxies import ObjectWrapper
 
 class Config(object):
     """Represents a collection of settings
@@ -158,7 +158,7 @@ class _Setting(object):
         return self.value != old and old is not self._init
 
 
-class SettingProxy(ObjectWrapper):
+class SettingProxy(peak.util.proxies.ObjectWrapper):
     """Wraps an object returned by a `Setting` descriptor
 
     Primarily it gives any object that comes from `Setting` a `changed`

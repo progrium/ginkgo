@@ -1,8 +1,8 @@
 import functools
 import runpy
 
-from util import AbstractStateMachine
-from util import defaultproperty
+from .util import AbstractStateMachine
+from .util import defaultproperty
 
 def require_ready(func):
     """ Decorator that blocks the call until the service is ready """
