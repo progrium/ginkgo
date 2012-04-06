@@ -49,8 +49,8 @@ setup(
     data_files=[],
     entry_points={
         'console_scripts': [
-            'ginkgo = ginkgo.app:run_ginkgo',
-            'ginkgoctl = ginkgo.app:run_ginkgoctl']},
+            'ginkgo = ginkgo.runner:run_ginkgo',
+            'ginkgoctl = ginkgo.runner:run_ginkgoctl']},
     cmdclass={
         'test': test(),
         'coverage': coverage(),
