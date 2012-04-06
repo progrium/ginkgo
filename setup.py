@@ -36,7 +36,8 @@ def coverage():
     os.execlp("nosetests", "nosetests",
             "--with-coverage", "--cover-package=ginkgo")
 
-from ginkgo import __version__
+version_info = (0, 5, 0)
+__version__ = ".".join(map(str, version_info))
 
 setup(
     name='Ginkgo',

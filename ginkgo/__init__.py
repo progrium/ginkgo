@@ -1,6 +1,3 @@
-version_info = (0, 5, 0)
-__version__ = ".".join(map(str, version_info))
-
 from .config import Config as _Config
 from .core import Service
 
