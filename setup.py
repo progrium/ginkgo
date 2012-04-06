@@ -36,8 +36,7 @@ def coverage():
     os.execlp("nosetests", "nosetests",
             "--with-coverage", "--cover-package=ginkgo")
 
-version_info = (0, 5, 0)
-__version__ = ".".join(map(str, version_info))
+from ginkgo import __version__
 
 setup(
     name='Ginkgo',
@@ -46,7 +45,7 @@ setup(
     author_email='jeff.lindsay@twilio.com',
     description='Lightweight service framework',
     packages=find_packages(),
-    install_requires=['gevent==0.13.3', 'nose', 'ProxyTypes==0.9'],
+    install_requires=['gevent>=0.13', 'nose', 'ProxyTypes==0.9'],
     data_files=[],
     entry_points={
         'console_scripts': [

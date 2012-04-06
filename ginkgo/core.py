@@ -4,8 +4,6 @@ import runpy
 from util import AbstractStateMachine
 from util import defaultproperty
 
-#from async import AsyncManager
-
 def require_ready(func):
     """ Decorator that blocks the call until the service is ready """
     @functools.wraps(func)

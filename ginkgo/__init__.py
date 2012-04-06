@@ -1,8 +1,14 @@
-version_info = (0, 5, 0)
-__version__ = ".".join(map(str, version_info))
+try:
+    from .config import Config as _Config
+except ImportError:
+    # Avoid dependencies when
+    # running setup.py
+    class _Config:
+        setting = None
 
-from .config import Config as _Config
 from .core import Service
+
+__version__ = ".".join(map(str, (0, 5, 0)))
 
 process = None
 settings = _Config()
