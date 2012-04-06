@@ -17,32 +17,40 @@ class Config(object):
         return path.lower().lstrip(".")
 
     def get(self, path, default=None):
+        """gets the current value of a setting"""
         return self._settings.get(self._normalize_path(path), default)
 
     def set(self, path, value):
+        """sets the value of a setting"""
         self._settings[self._normalize_path(path)] = value
 
     def group(self, path=''):
+        """returns a Group object for the given path"""
         return Group(self, path)
 
     def setting(self, *args, **kwargs):
+        """returns a _Setting descriptor attached to this configuration"""
         descriptor = _Setting(self, *args, **kwargs)
         self._descriptors.append(descriptor)
         return descriptor
 
     def load_module(self, module_path):
+        """loads a module as configuration given a module path"""
         return self.load(runpy.run_module(module_path))
 
     def load_file(self, file_path):
+        """loads a module as configuration given a file path"""
         file_path = os.path.abspath(os.path.expanduser(file_path))
         config_dict = runpy.run_path(file_path)
         self._last_file = file_path
         return self.load(config_dict)
 
     def reload_file(self):
+        """reloads the last loaded configuration from load_file"""
         return self.load_file(self._last_file)
 
     def load(self, config_dict):
+        """loads a dictionary into settings"""
         def _load(d, prefix=''):
             """
             Recursively loads configuration from a dictionary, putting

@@ -8,6 +8,8 @@ except ImportError:
 
 from .core import Service
 
+__author__ = "Jeff Lindsay <jeff.lindsay@twilio.com>"
+__license__ = "MIT"
 __version__ = ".".join(map(str, (0, 5, 0)))
 
 process = None

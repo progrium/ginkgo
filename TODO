@@ -1,6 +1,8 @@
 - Real log support
 - Manage/close/keep open file descriptors?
 - Check API compatibility, make upgrade doc
+- make sure exit codes are correct
+- hook system?
 
 To think about / design:
  - Generalized timeouts. Part of AsyncManager interface?

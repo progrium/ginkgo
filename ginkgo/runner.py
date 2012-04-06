@@ -248,7 +248,7 @@ class Process(ContainerService):
             try:
                 hook(*args, **kwargs)
             except Exception, e:
-                raise RuntimeWarning("Hook Error: {}".format(e))
+                raise RuntimeError("Hook Error: {}".format(e))
 
     def __enter__(self):
         ginkgo.push_process(self)
