@@ -176,7 +176,7 @@ class BasicService(object):
         """Empty implementation of service reload. Implement me!"""
         pass
 
-    def serve_forever(self, ready_callback=None):
+    def serve_forever(self):
         """Start the service if it hasn't been already started and wait until it's stopped."""
         try:
             self.start()
@@ -184,8 +184,6 @@ class BasicService(object):
             # If it can't start because it's
             # already started, just move on
             pass
-        if ready_callback is not None:
-            ready_callback()
 
         # This is done to recursively get services to wait on stopped.
         # Services based on BasicService will not wait because they
