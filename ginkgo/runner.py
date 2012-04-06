@@ -37,7 +37,7 @@ def run_ginkgo():
     else:
         if args.target:
             try:
-                Runner().start(args.target)
+                ControlInterface().start(args.target)
             except RuntimeError, e:
                 parser.error(e)
         else:
@@ -64,9 +64,9 @@ def run_ginkgoctl():
         if args.action in ["start", "restart"]:
             if not args.target:
                 parser.error("You need to specify a target for {}".format(args.action))
-            getattr(Runner(), args.action)(args.target)
+            getattr(ControlInterface(), args.action)(args.target)
         else:
-            getattr(Runner(), args.action)(resolve_pid(args.pid, args.target))
+            getattr(ControlInterface(), args.action)(resolve_pid(args.pid, args.target))
     except RuntimeError, e:
         parser.error(e)
 
@@ -117,7 +117,7 @@ def prepare_app(target):
         raise RuntimeError("Does not appear to be a valid service")
     return Process(service)
 
-class Runner(object):
+class ControlInterface(object):
     def start(self, target):
         print "Starting process with {}...".format(target)
         app = prepare_app(target)
@@ -238,6 +238,9 @@ class Process(ContainerService):
         print "Stopping."
         if self.daemon:
             self.pidfile.unlink()
+
+    def do_reload(self):
+        self.config.reload_file()
 
     def trigger_hook(self, name, *args, **kwargs):
         hook = self.config.get(name)

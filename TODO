@@ -1,6 +1,5 @@
 - Real log support
 - Manage/close/keep open file descriptors?
-- Process.do_reload to reload config
 - Check API compatibility, make upgrade doc
 
 To think about / design:
