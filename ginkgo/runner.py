@@ -224,7 +224,7 @@ class Process(ginkgo.core.ContainerService):
 
         # TODO: move this to async manager?
         import gevent
-        gevent.core.reinit()
+        gevent.reinit()
 
         # TODO: upgrade to gevent 1.0 and use standard signal
         gevent.signal(RELOAD_SIGNAL, self.reload)
