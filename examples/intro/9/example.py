@@ -3,8 +3,9 @@ from gevent.pywsgi import WSGIServer
 from gevent.server import StreamServer
 from gevent.socket import create_connection
 
-from ginkgo.core import Service
-from ginkgo.config import Setting
+from ginkgo import Service
+from ginkgo.async.gevent import ServerWrapper
+from ginkgo import Setting
 
 class TcpClient(Service):
     def __init__(self, address, handler):
@@ -20,11 +21,12 @@ class MyApplication(Service):
     connect_address = Setting('connect_address')
     
     def __init__(self):
-        self.add_service(WSGIServer(('127.0.0.1', self.http_port), self.handle_http))
-        self.add_service(StreamServer(('127.0.0.1', self.tcp_port), self.handle_tcp))
+        self.add_service(ServerWrapper(WSGIServer(('127.0.0.1', self.http_port), self.handle_http)))
+        self.add_service(ServerWrapper(StreamServer(('127.0.0.1', self.tcp_port), self.handle_tcp)))
         self.add_service(TcpClient(self.connect_address, self.client_connect))
     
     def client_connect(self, address):
+        gevent.sleep(1)
         sockfile = create_connection(address).makefile()
         while True:
             line = sockfile.readline() # returns None on EOF
