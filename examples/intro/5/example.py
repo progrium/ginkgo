@@ -6,7 +6,8 @@ from gevent.pywsgi import WSGIServer
 from gevent.server import StreamServer
 from gevent.socket import create_connection
 
-from ginkgo.core import Service
+from ginkgo import Service
+from ginkgo.async.gevent import ServerWrapper
 
 class TcpClient(Service):
     def __init__(self, address, handler):
@@ -28,6 +29,7 @@ def handle_tcp(socket, address):
         gevent.sleep(1)
 
 def client_connect(address):
+    gevent.sleep(1)
     sockfile = create_connection(address).makefile()
     while True:
         line = sockfile.readline() # returns None on EOF
@@ -37,8 +39,8 @@ def client_connect(address):
             break
 
 app = Service()
-app.add_service(StreamServer(('127.0.0.1', 1234), handle_tcp))
-app.add_service(WSGIServer(('127.0.0.1', 8080), handle_http))
+app.add_service(ServerWrapper(StreamServer(('127.0.0.1', 1234), handle_tcp)))
+app.add_service(ServerWrapper(WSGIServer(('127.0.0.1', 8080), handle_http)))
 app.add_service(TcpClient(('127.0.0.1', 1234), client_connect))
 app.serve_forever()
 
