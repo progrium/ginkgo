@@ -1,4 +1,5 @@
 import argparse
+import logging
 import os
 import os.path
 import runpy
@@ -6,10 +7,13 @@ import signal
 import sys
 
 import ginkgo.core
+import ginkgo.logger
 import ginkgo.util
 
 STOP_SIGNAL = signal.SIGTERM
 RELOAD_SIGNAL = signal.SIGHUP
+
+logger = logging.getLogger(__name__)
 
 def run_ginkgo():
     parser = argparse.ArgumentParser(prog="ginkgo", add_help=False)
@@ -53,13 +57,13 @@ def run_ginkgoctl():
         configuration file path to use (/path/to/config.py)
         """.strip())
     parser.add_argument("action",
-        choices=["start", "stop", "restart", "reload", "status"])
+        choices="start stop restart reload status log logtail".split())
     args = parser.parse_args()
     if args.pid and args.target:
         parser.error("You cannot specify both a target and a pid")
     ginkgo.settings.set("daemon", True)
     try:
-        if args.action in ["start", "restart"]:
+        if args.action in "start restart log logtail".split():
             if not args.target:
                 parser.error("You need to specify a target for {}".format(args.action))
             getattr(ControlInterface(), args.action)(args.target)
@@ -151,6 +155,17 @@ class ControlInterface(object):
         except (OSError, TypeError):
             print "Process is NOT running."
 
+    def log(self, target):
+        app = prepare_app(target)
+        app.logger.print_log()
+
+    def logtail(self, target):
+        try:
+            app = prepare_app(target)
+            app.logger.tail_log()
+        except KeyboardInterrupt:
+            pass
+
 class Process(ginkgo.core.Service):
     start_before = True
 
@@ -177,6 +192,8 @@ class Process(ginkgo.core.Service):
         self.config = config or ginkgo.settings
         self.app = app_service
         self.add_service(self.app)
+
+        self.logger = ginkgo.logger.Logger(self)
 
         if self.daemon:
             if self.pidfile is None:
@@ -218,15 +235,13 @@ class Process(ginkgo.core.Service):
             ginkgo.util.daemonize()
             self.pid = os.getpid()
             self.pidfile.create(self.pid)
-
-            # TODO: placeholder for logs
-            f = open("/tmp/test.log", "w", buffering=0)
-            os.dup2(f.fileno(), sys.stderr.fileno())
-            os.dup2(f.fileno(), sys.stdout.fileno())
+            self.logger.open()
+            self.logger.redirect(sys.stdout)
+            self.logger.redirect(sys.stderr)
 
         # TODO: move this to async manager?
         import gevent
-        gevent.core.reinit()
+        gevent.reinit()
 
         # TODO: upgrade to gevent 1.0 and use standard signal
         gevent.signal(RELOAD_SIGNAL, self.reload)
@@ -235,7 +250,8 @@ class Process(ginkgo.core.Service):
         # TODO: use all those settings
 
     def do_stop(self):
-        print "Stopping."
+        logger.info("Stopping.")
+        self.logger.close()
         if self.daemon:
             self.pidfile.unlink()
 
