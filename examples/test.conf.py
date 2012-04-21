@@ -7,7 +7,7 @@ from ginkgo import Setting
 delay = 1
 
 class MyService(_Service):
-    #async = 'ginkgo.async.eventlet'
+    async = 'ginkgo.async.eventlet'
 
     foo = Setting("foo", default=("foo", 12), help="This is foo")
     bar = Setting("bar", help="This is bar")

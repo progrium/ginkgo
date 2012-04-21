@@ -21,10 +21,12 @@ class AsyncManager(BasicService):
     def do_stop(self):
         if eventlet.greenthread.getcurrent() in self._greenlets.coroutines_running:
             return eventlet.spawn(self.do_stop).join()
-        if self._greenlets:
-            self._greenlets.waitall() # put in timeout for stop_timeout
-            for g in self._greenlets.coroutines_running:
-                g.kill() # timeout of 1 sec?
+        if self._greenlets.running():
+            with eventlet.timeout.Timeout(self.stop_timeout, False):
+                self._greenlets.waitall() # put in timeout for stop_timeout
+            for g in list(self._greenlets.coroutines_running):
+                with eventlet.timeout.Timeout(1, False):
+                    g.kill() # timeout of 1 sec?
 
     def spawn(self, func, *args, **kwargs):
         """Spawn a greenlet under this service"""
@@ -56,3 +58,10 @@ class Event(eventlet.event.Event):
 
     def set(self):
         self.send()
+
+    def wait(self, timeout=None):
+        if timeout:
+            with eventlet.timeout.Timeout(timeout, False):
+                super(Event, self).wait()
+        else:
+            super(Event, self).wait()

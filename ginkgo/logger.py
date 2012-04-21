@@ -21,7 +21,7 @@ class Logger(object):
                     format="%(asctime)s %(levelname) 7s %(module)s: %(message)s",
                     level=logging.DEBUG))
         logging.basicConfig(**self.config)
-        
+
         self.file = None
 
     def open(self):
