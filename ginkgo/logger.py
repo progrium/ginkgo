@@ -21,8 +21,8 @@ class Logger(object):
                     format="%(asctime)s %(levelname) 7s %(module)s: %(message)s",
                     level=logging.DEBUG))
         logging.basicConfig(**self.config)
-
-        #self.file = open(self.logfile, "w", buffering=0)
+        
+        self.file = None
 
     def open(self):
         self.file = open(self.logfile, "w", buffering=0)
@@ -31,7 +31,8 @@ class Logger(object):
         os.dup2(self.file.fileno(), input.fileno())
 
     def close(self):
-        self.file.close()
+        if self.file:
+            self.file.close()
 
     def print_log(self):
         with open(self.logfile, "r") as f:
