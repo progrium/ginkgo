@@ -7,6 +7,8 @@ from ginkgo import Setting
 delay = 1
 
 class MyService(_Service):
+    #async = 'ginkgo.async.eventlet'
+
     foo = Setting("foo", default=("foo", 12), help="This is foo")
     bar = Setting("bar", help="This is bar")
     delay = Setting("delay", default=1, help="Delay between hello printing")
@@ -17,6 +19,7 @@ class MyService(_Service):
 
     def do_start(self):
         self.log.info("Hello here")
+        self.spawn_later(3, lambda: self.log.info("3 seconds"))
         self.spawn(self.loop)
 
     def do_reload(self):
