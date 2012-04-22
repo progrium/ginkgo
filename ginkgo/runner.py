@@ -105,19 +105,18 @@ def prepare_app(target):
     if os.path.exists(target):
         config = ginkgo.settings.load_file(target)
         try:
-            service = config['service']
+            service_factory = config['service']
         except KeyError:
-            raise RuntimeError("Configuration does not specify a service")
+            raise RuntimeError(
+                "Configuration does not specify a service factory")
     else:
-        service = target
-    if isinstance(service, str):
-        service = load_class(service)()
-    elif callable(service):
-        # Class or factory
-        service = service()
+        service_factory = target
+    if isinstance(service_factory, str):
+        service_factory = load_class(service_factory)
+    if callable(service_factory):
+        return Process(service_factory)
     else:
-        raise RuntimeError("Does not appear to be a valid service")
-    return Process(service)
+        raise RuntimeError("Does not appear to be a valid service factory")
 
 class ControlInterface(object):
     def start(self, target):
@@ -188,17 +187,17 @@ class Process(ginkgo.core.Service):
         Change file mode creation mask before running
         """.strip())
 
-    def __init__(self, app_service, config=None):
-        self.config = config or ginkgo.settings
-        self.app = app_service
-        self.add_service(self.app)
+    def __init__(self, app_factory, config=None):
+        self.app_factory = app_factory
+        self.app = None
 
+        self.config = config or ginkgo.settings
         self.logger = ginkgo.logger.Logger(self)
 
         if self.daemon:
             if self.pidfile is None:
                 self.config.set("pidfile",
-                        "/tmp/{}.pid".format(self.app.service_name))
+                        "/tmp/{}.pid".format(self.service_name))
             self.pidfile = ginkgo.util.Pidfile(str(self.pidfile))
         else:
             self.pidfile = None
@@ -210,8 +209,28 @@ class Process(ginkgo.core.Service):
 
         ginkgo.process = ginkgo.process or self
 
+    @property
+    def service_name(self):
+        if self.app is None:
+            if self.app_factory.__name__ == 'service':
+                name = self.app_factory.__doc__ or self.app_factory.__name__
+                return name.split(' ', 1)[0]
+            else:
+                return self.app_factory.__name__
+        else:
+            return self.app.service_name
+
     def do_start(self):
-        ginkgo.util.prevent_core_dump()
+        if self.daemon:
+            ginkgo.util.prevent_core_dump()
+            ginkgo.util.daemonize()
+
+            self.pid = os.getpid()
+            self.pidfile.create(self.pid)
+
+            self.logger.open()
+            self.logger.redirect(sys.stdout)
+            self.logger.redirect(sys.stderr)
 
         if self.umask is not None:
             os.umask(self.umask)
@@ -219,6 +238,18 @@ class Process(ginkgo.core.Service):
         if self.rundir is not None:
             os.chdir(self.rundir)
 
+        self.app = self.app_factory()
+        self.add_service(self.app)
+
+        # TODO: move this to async manager?
+        import gevent
+        gevent.reinit()
+
+        # TODO: upgrade to gevent 1.0 and use standard signal
+        gevent.signal(RELOAD_SIGNAL, self.reload)
+        gevent.signal(STOP_SIGNAL, self.stop)
+
+    def post_start(self):
         if self.user is not None:
             pw_record = pwd.getpwnam(self.user)
             self.uid = pw_record.pw_uid
@@ -230,24 +261,6 @@ class Process(ginkgo.core.Service):
             grp_record = grp.getgrnam(self.group)
             self.gid = grp_record.gr_gid
             os.setgid(gid)
-
-        if self.daemon:
-            ginkgo.util.daemonize()
-            self.pid = os.getpid()
-            self.pidfile.create(self.pid)
-            self.logger.open()
-            self.logger.redirect(sys.stdout)
-            self.logger.redirect(sys.stderr)
-
-        # TODO: move this to async manager?
-        import gevent
-        gevent.reinit()
-
-        # TODO: upgrade to gevent 1.0 and use standard signal
-        gevent.signal(RELOAD_SIGNAL, self.reload)
-        gevent.signal(STOP_SIGNAL, self.stop)
-
-        # TODO: use all those settings
 
     def do_stop(self):
         logger.info("Stopping.")

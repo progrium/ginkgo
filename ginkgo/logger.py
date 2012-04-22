@@ -14,7 +14,7 @@ class Logger(object):
     def __init__(self, process):
         if self.logfile is None:
             process.config.set("logfile",
-                    "/tmp/{}.log".format(process.app.service_name))
+                    "/tmp/{}.log".format(process.service_name))
 
         if self.config is None:
             process.config.set("logconfig", dict(
