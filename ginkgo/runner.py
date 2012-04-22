@@ -213,40 +213,30 @@ class Process(ginkgo.core.Service):
     def service_name(self):
         if self.app is None:
             if self.app_factory.__name__ == 'service':
-                return self.app_factory.__doc__ or self.app_factory.__name__
+                name = self.app_factory.__doc__ or self.app_factory.__name__
+                return name.split(' ', 1)[0]
             else:
                 return self.app_factory.__name__
         else:
             return self.app.service_name
 
     def do_start(self):
-        ginkgo.util.prevent_core_dump()
+        if self.daemon:
+            ginkgo.util.prevent_core_dump()
+            ginkgo.util.daemonize()
+
+            self.pid = os.getpid()
+            self.pidfile.create(self.pid)
+
+            self.logger.open()
+            self.logger.redirect(sys.stdout)
+            self.logger.redirect(sys.stderr)
 
         if self.umask is not None:
             os.umask(self.umask)
 
         if self.rundir is not None:
             os.chdir(self.rundir)
-
-        if self.user is not None:
-            pw_record = pwd.getpwnam(self.user)
-            self.uid = pw_record.pw_uid
-            self.gid = pw_record.pw_gid
-            os.setuid(self.uid)
-            os.setgid(self.gid)
-
-        if self.group is not None:
-            grp_record = grp.getgrnam(self.group)
-            self.gid = grp_record.gr_gid
-            os.setgid(gid)
-
-        if self.daemon:
-            ginkgo.util.daemonize()
-            self.pid = os.getpid()
-            self.pidfile.create(self.pid)
-            self.logger.open()
-            self.logger.redirect(sys.stdout)
-            self.logger.redirect(sys.stderr)
 
         self.app = self.app_factory()
         self.add_service(self.app)
@@ -259,7 +249,18 @@ class Process(ginkgo.core.Service):
         gevent.signal(RELOAD_SIGNAL, self.reload)
         gevent.signal(STOP_SIGNAL, self.stop)
 
-        # TODO: use all those settings
+    def post_start(self):
+        if self.user is not None:
+            pw_record = pwd.getpwnam(self.user)
+            self.uid = pw_record.pw_uid
+            self.gid = pw_record.pw_gid
+            os.setuid(self.uid)
+            os.setgid(self.gid)
+
+        if self.group is not None:
+            grp_record = grp.getgrnam(self.group)
+            self.gid = grp_record.gr_gid
+            os.setgid(gid)
 
     def do_stop(self):
         logger.info("Stopping.")
