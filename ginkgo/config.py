@@ -1,5 +1,6 @@
 import os.path
 import peak.util.proxies
+import re
 import runpy
 
 class Config(object):
@@ -72,7 +73,8 @@ class Config(object):
             if d.help:
                 value = d.default if only_default else self.get(d.path,
                                                                 d.default)
-                print "  %- 14s %s [%s]" % (d.path, d.help, value)
+                print "  %- 14s %s [%s]" % (
+                    d.path, d.help.replace('\n', '\n'+' '*17), value)
 
 
 class Group(object):
@@ -137,7 +139,7 @@ class _Setting(object):
         self.path = path
         self.default = default
         self.monitored = monitored
-        self.help = self.__doc__ = help
+        self.help = self.__doc__ = re.sub(r'\n\s+', '\n', help.strip())
 
     def __get__(self, instance, type):
         if self.monitored:
