@@ -105,19 +105,18 @@ def prepare_app(target):
     if os.path.exists(target):
         config = ginkgo.settings.load_file(target)
         try:
-            service = config['service']
+            service_factory = config['service']
         except KeyError:
-            raise RuntimeError("Configuration does not specify a service")
+            raise RuntimeError(
+                "Configuration does not specify a service factory")
     else:
-        service = target
-    if isinstance(service, str):
-        service = load_class(service)()
-    elif callable(service):
-        # Class or factory
-        service = service()
+        service_factory = target
+    if isinstance(service_factory, str):
+        service_factory = load_class(service_factory)
+    if callable(service_factory):
+        return Process(service_factory)
     else:
-        raise RuntimeError("Does not appear to be a valid service")
-    return Process(service)
+        raise RuntimeError("Does not appear to be a valid service factory")
 
 class ControlInterface(object):
     def start(self, target):
@@ -188,17 +187,17 @@ class Process(ginkgo.core.Service):
         Change file mode creation mask before running
         """.strip())
 
-    def __init__(self, app_service, config=None):
-        self.config = config or ginkgo.settings
-        self.app = app_service
-        self.add_service(self.app)
+    def __init__(self, app_factory, config=None):
+        self.app_factory = app_factory
+        self.app = None
 
+        self.config = config or ginkgo.settings
         self.logger = ginkgo.logger.Logger(self)
 
         if self.daemon:
             if self.pidfile is None:
                 self.config.set("pidfile",
-                        "/tmp/{}.pid".format(self.app.service_name))
+                        "/tmp/{}.pid".format(self.service_name))
             self.pidfile = ginkgo.util.Pidfile(str(self.pidfile))
         else:
             self.pidfile = None
@@ -209,6 +208,16 @@ class Process(ginkgo.core.Service):
         self.environ = os.environ
 
         ginkgo.process = ginkgo.process or self
+
+    @property
+    def service_name(self):
+        if self.app is None:
+            if self.app_factory.__name__ == 'service':
+                return self.app_factory.__doc__ or self.app_factory.__name__
+            else:
+                return self.app_factory.__name__
+        else:
+            return self.app.service_name
 
     def do_start(self):
         ginkgo.util.prevent_core_dump()
@@ -238,6 +247,9 @@ class Process(ginkgo.core.Service):
             self.logger.open()
             self.logger.redirect(sys.stdout)
             self.logger.redirect(sys.stderr)
+
+        self.app = self.app_factory()
+        self.add_service(self.app)
 
         # TODO: move this to async manager?
         import gevent
