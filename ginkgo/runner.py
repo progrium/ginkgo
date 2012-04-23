@@ -170,22 +170,22 @@ class Process(ginkgo.core.Service):
 
     daemon = ginkgo.Setting("daemon", default=False, help="""
         True or False whether to daemonize
-        """.strip())
+        """)
     pidfile = ginkgo.Setting("pidfile", default=None, help="""
         Path to pidfile to use when daemonizing
-        """.strip())
+        """)
     rundir = ginkgo.Setting("rundir", default=None, help="""
         Change to a directory before running
-        """.strip())
+        """)
     user = ginkgo.Setting("user", default=None, help="""
         Change to a different user before running
-        """.strip())
+        """)
     group = ginkgo.Setting("group", default=None, help="""
         Change to a different group before running
-        """.strip())
+        """)
     umask = ginkgo.Setting("umask", default=None, help="""
         Change file mode creation mask before running
-        """.strip())
+        """)
 
     def __init__(self, app_factory, config=None):
         self.app_factory = app_factory
@@ -228,9 +228,8 @@ class Process(ginkgo.core.Service):
             self.pid = os.getpid()
             self.pidfile.create(self.pid)
 
-            self.logger.open()
-            self.logger.redirect(sys.stdout)
-            self.logger.redirect(sys.stderr)
+            self.logger.reopen_logs()
+            self.logger.capture_stdio()
 
         if self.umask is not None:
             os.umask(self.umask)
@@ -264,7 +263,7 @@ class Process(ginkgo.core.Service):
 
     def do_stop(self):
         logger.info("Stopping.")
-        self.logger.close()
+        self.logger.shutdown()
         if self.daemon:
             self.pidfile.unlink()
 

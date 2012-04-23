@@ -49,17 +49,6 @@ def get_maxfd():
         maxfd = MAXFD
     return maxfd
 
-try:
-    from os import closerange
-except ImportError:
-    def closerange(fd_low, fd_high):
-        # Iterate through and close all file descriptors.
-        for fd in xrange(fd_low, fd_high):
-            try:
-                os.close(fd)
-            except OSError:	# ERROR, fd wasn't open to begin with (ignored)
-                pass
-
 def daemonize():
     """\
     Standard daemonization of a process.
@@ -74,7 +63,11 @@ def daemonize():
 
     os.umask(0)
     maxfd = get_maxfd()
-    closerange(0, maxfd)
+    for fd in xrange(0, maxfd):
+        try:
+            os.close(fd)
+        except OSError: # fd wasn't open to begin with (ignored)
+            pass
 
     os.open(DEVNULL, os.O_RDWR)
     os.dup2(0, 1)
