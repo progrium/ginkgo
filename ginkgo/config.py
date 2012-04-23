@@ -74,7 +74,7 @@ class Config(object):
                 value = d.default if only_default else self.get(d.path,
                                                                 d.default)
                 print "  %- 14s %s [%s]" % (
-                    d.path, d.help.replace('\n', '\n'+' '*17), value)
+                    d.path, d.help.replace('\n', '\n'+' '*18), value)
 
 
 class Group(object):
