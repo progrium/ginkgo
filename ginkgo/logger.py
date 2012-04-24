@@ -13,50 +13,56 @@ class Logger(object):
         Path to primary log file. Ignored if logconfig is set.
         """)
     loglevel = ginkgo.Setting("loglevel", default='debug', help="""
-        Log level to use. Options: debug, info, warning, critical
+        Log level to use. Valid options: debug, info, warning, critical
         Ignored if logconfig is set.
         """)
     config = ginkgo.Setting("logconfig", default=None, help="""
         Configuration of standard Python logger. Can be dict for basicConfig,
-        dict with version key for dictConfig, or filepath for fileConfig.
+        dict with version key for dictConfig, or ini filepath for fileConfig.
         """)
 
     def __init__(self, process):
+        self.process = process
+
         if self.logfile is None:
-            process.config.set("logfile",
+            self.process.config.set("logfile",
                     "/tmp/{}.log".format(process.service_name))
 
+        self.load_config()
+
+    def load_config(self):
         if self.config is None:
             default_config = dict(
                 format=DEFAULT_FORMAT,
                 level=getattr(logging, self.loglevel.upper()))
-            if process.daemon:
+            if self.process.daemon:
                 default_config['filename'] = self.logfile
-            logging.basicConfig(**default_config)
+            self._reset_basic_config(default_config)
         else:
             if isinstance(self.config, str) and os.path.exists(self.config):
                 logging.config.fileConfig(self.config)
             elif 'version' in self.config:
                 logging.config.dictConfig(self.config)
             else:
-                logging.basicConfig(**self.config)
+                self._reset_basic_config(self.config)
+
+    def _reset_basic_config(self, config):
+        for h in logging.root.handlers[:]:
+            logging.root.removeHandler(h)
+        logging.basicConfig(**config)
 
     def capture_stdio(self):
         # TODO: something smarter than this?
-        os.dup2(logging._handlerList[0]().stream.fileno(), sys.stdout.fileno())
-        os.dup2(logging._handlerList[0]().stream.fileno(), sys.stderr.fileno())
+        try:
+            os.dup2(logging._handlerList[0]().stream.fileno(), sys.stdout.fileno())
+            os.dup2(logging._handlerList[0]().stream.fileno(), sys.stderr.fileno())
+        except:
+            pass
 
-    def reopen_logs(self):
-        for wr in logging._handlerList:
-            handler = wr() # _handlerList items are weak references
-            if isinstance(handler, logging.FileHandler):
-                handler.acquire()
-                try:
-                    if handler.stream:
-                        handler.stream.close()
-                        handler.stream = handler._open()
-                finally:
-                    handler.release()
+    @property
+    def file_descriptors(self):
+        return [handler.stream.fileno() for handler in [wr() for wr in
+            logging._handlerList] if isinstance(handler, logging.FileHandler)]
 
     def shutdown(self):
         logging.shutdown()

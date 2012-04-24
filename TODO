@@ -1,14 +1,8 @@
-- Manage/close/keep open file descriptors?
-- Check API compatibility, make upgrade doc
 - make sure exit codes are correct
-- hook system?
 
 To think about / design:
  - Generalized timeouts. Part of AsyncManager interface?
  - AsyncManager "backends". gevent, eventlet, threads, subprocesses
  - Multiprocess support. Pistil? 
  - Shared port bindings. Based on Pistil, expose with a Setting subclass Binding?
-   - Also, binding ahead of time before shedding privs **
- - How can chroots be done as an extension. Middleware? Hooks? **
 
-** Actually more important than the others for release

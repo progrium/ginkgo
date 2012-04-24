@@ -3,8 +3,9 @@ from ginkgo import Service as _Service
 from ginkgo import Setting
 
 
-#daemon = True
+daemon = True
 delay = 1
+logconfig = {"filename": "/tmp/MyService.log", "level": logging.DEBUG}
 
 class MyService(_Service):
     foo = Setting("foo", default=("foo", 12), help="This is foo")

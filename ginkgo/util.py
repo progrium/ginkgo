@@ -49,7 +49,7 @@ def get_maxfd():
         maxfd = MAXFD
     return maxfd
 
-def daemonize():
+def daemonize(preserve_fds=None):
     """\
     Standard daemonization of a process.
     http://www.svbug.com/documentation/comp.unix.programmer-FAQ/faq_2.html#SEC16
@@ -63,11 +63,13 @@ def daemonize():
 
     os.umask(0)
     maxfd = get_maxfd()
+    preserve_fds = preserve_fds or []
     for fd in xrange(0, maxfd):
-        try:
-            os.close(fd)
-        except OSError: # fd wasn't open to begin with (ignored)
-            pass
+        if fd not in preserve_fds:
+            try:
+                os.close(fd)
+            except OSError: # fd wasn't open to begin with (ignored)
+                pass
 
     os.open(DEVNULL, os.O_RDWR)
     os.dup2(0, 1)

@@ -223,12 +223,10 @@ class Process(ginkgo.core.Service):
     def do_start(self):
         if self.daemon:
             ginkgo.util.prevent_core_dump()
-            ginkgo.util.daemonize()
-
+            ginkgo.util.daemonize(
+                preserve_fds=self.logger.file_descriptors)
             self.pid = os.getpid()
             self.pidfile.create(self.pid)
-
-            self.logger.reopen_logs()
             self.logger.capture_stdio()
 
         if self.umask is not None:
@@ -269,8 +267,10 @@ class Process(ginkgo.core.Service):
 
     def do_reload(self):
         self.config.reload_file()
+        self.logger.load_config()
 
     def trigger_hook(self, name, *args, **kwargs):
+        """ Experimental """
         hook = self.config.get(name)
         if hook is not None and callable(hook):
             try:
