@@ -9,7 +9,7 @@ logconfig = {"filename": "/tmp/MyService.log", "level": logging.DEBUG}
 
 class MyService(_Service):
     foo = Setting("foo", default=("foo", 12), help="This is foo")
-    bar = Setting("bar", help="This is bar")
+    bar = Setting("bar", help="This is bar", monitored=True)
     delay = Setting("delay", default=1, help="Delay between hello printing")
 
     def __init__(self):
@@ -22,6 +22,7 @@ class MyService(_Service):
 
     def do_reload(self):
         self.log.info("reloaded!")
+        self.log.info("changed: {}".format(self.bar.changed))
 
     def loop(self):
         while True:

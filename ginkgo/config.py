@@ -1,5 +1,5 @@
 import os.path
-import peak.util.proxies
+import util
 import re
 import runpy
 
@@ -160,7 +160,7 @@ class _Setting(object):
         return self.value != old and old is not self._init
 
 
-class SettingProxy(peak.util.proxies.ObjectWrapper):
+class SettingProxy(util.ObjectWrapper):
     """Wraps an object returned by a `Setting` descriptor
 
     Primarily it gives any object that comes from `Setting` a `changed`
@@ -170,7 +170,7 @@ class SettingProxy(peak.util.proxies.ObjectWrapper):
     descriptor = None
 
     def __init__(self, obj, descriptor):
-        ObjectWrapper.__init__(self, obj)
+        super(SettingProxy, self).__init__(obj)
         self.descriptor = descriptor
 
     @property
@@ -194,7 +194,7 @@ if __name__ == '__main__':
     assert c.get("foo") == "bar"
 
     class MyClass(object):
-        foo = c.setting("foo", doc="This is foo.")
+        foo = c.setting("foo", help="This is foo.", monitored=True)
 
         def override(self):
             self.foo = "qux"
