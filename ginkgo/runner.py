@@ -96,8 +96,22 @@ def load_class(class_path):
             module = runpy.run_module(module_name)
         except ImportError:
             module = runpy.run_module(module_name + ".__init__")
+    except ImportError, e:
+        import traceback, pkgutil
+        tb_tups = traceback.extract_tb(sys.exc_info()[2])
+        if pkgutil.__file__.startswith(tb_tups[-1][0]):
+            # If the bottommost frame in our stack was in pkgutil,
+            # then we can safely say that this ImportError occurred
+            # because the top level class path was not found.
+            raise RuntimeError("Unable to load class path: {}:\n{}".format(
+                class_path, e))
+        else:
+            # If the ImportError occurred further down,
+            # raise original exception.
+            raise
+    try:
         return module[class_name]
-    except (ImportError, KeyError), e:
+    except KeyError, e:
         raise RuntimeError("Unable to load class path: {}:\n{}".format(
             class_path, e))
 
