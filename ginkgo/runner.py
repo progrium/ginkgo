@@ -210,7 +210,7 @@ class Process(ginkgo.core.Service):
         self.config = config or ginkgo.settings
         self.logger = ginkgo.logger.Logger(self)
 
-        if self.daemon:
+        if self.pidfile is not False:
             if self.pidfile is None:
                 self.config.set("pidfile",
                         "/tmp/{}.pid".format(self.service_name))
@@ -241,9 +241,11 @@ class Process(ginkgo.core.Service):
             ginkgo.util.prevent_core_dump()
             ginkgo.util.daemonize(
                 preserve_fds=self.logger.file_descriptors)
-            self.pid = os.getpid()
-            self.pidfile.create(self.pid)
             self.logger.capture_stdio()
+            self.pid = os.getpid()
+
+        if self.pidfile:
+            self.pidfile.create(self.pid)
 
         if self.umask is not None:
             os.umask(self.umask)
@@ -278,7 +280,7 @@ class Process(ginkgo.core.Service):
     def do_stop(self):
         logger.info("Stopping.")
         self.logger.shutdown()
-        if self.daemon:
+        if self.pidfile:
             self.pidfile.unlink()
 
     def do_reload(self):
