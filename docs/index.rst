@@ -1,55 +1,85 @@
-.. gevent-tools documentation master file, created by
-   sphinx-quickstart on Sun May  8 03:34:49 2011.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+Ginkgo Service Framework
+========================
 
-Introduction
-============
+Ginkgo is a lightweight framework for writing network service daemons in
+Python. It currently focuses on gevent as its core networking and concurrency
+layer.
 
-gevent-tools is a collection of mini-libraries and utilities built on gevent for building gevent applications. There are currently three modules:
+Here's what writing a simple server application looks like:
 
-- :mod:`service` Provides a base class for implementing services, which are a nice way to organize large gevent applications. Services contain greenlets and other services, and provide a good foundation to build the components of any application.
-- :mod:`cluster` A distributed roster manager for clusters for building distributed apps that need to know other hosts available in the cluster.
-- :mod:`util` A couple of utility methods for building network applications in gevent
+::
 
-Building services
-=================
+    import random
+    from ginkgo import Service, Setting
+    from ginkgo.async.gevent import ServerWrapper
 
-.. autoclass:: ginkgo.core.Service
-   
-   .. attribute:: started
-   
-      This property returns whether this service has been started
-   
-   .. autoattribute:: ginkgo.core.Service.ready
-   .. automethod:: ginkgo.core.Service._ready
-   .. automethod:: ginkgo.core.Service.add_service
-   .. automethod:: ginkgo.core.Service.remove_service
-   .. automethod:: ginkgo.core.Service._start
-   .. automethod:: ginkgo.core.Service._stop
-   .. automethod:: ginkgo.core.Service.start
-   .. automethod:: ginkgo.core.Service.stop
-   .. automethod:: ginkgo.core.Service.serve_forever
-   .. automethod:: ginkgo.core.Service.spawn
-   .. automethod:: ginkgo.core.Service.spawn_later
-   .. automethod:: ginkgo.core.Service.catch
-   
-Utilities
-=========
+    class NumberServer(Service):
+        """TCP server that emits random numbers"""
 
-.. automodule:: gevent_tools.util
-   :members:
+        address = Setting("numbers.bind", default=('0.0.0.0', 7776))
+        emit_rate = Setting("numbers.rate_per_min", default=60)
 
-Contents:
+        def __init__(self):
+            self.add_service(ServerWrapper(
+                    StreamServer(self.address, self.handle)))
+
+        def handle(self, socket, address):
+            while True:
+                try:
+                    number = random.randint(0, 10)
+                    socket.send("{}\n".format(number))
+                    self.async.sleep(60 / self.emit_rate)
+                except IOError:
+                    break # Connection lost
+
+With this module you now have a configurable, daemonizable server ready to be
+deployed. Ginkgo gives you a simple runner to execute your app:
+
+    $ ginkgo server.NumberServer
+
+As well as a more full featured service management tool:
+
+    $ ginkgoctl server.NumberServer start
+
+Check out the Quickstart to see how you can reload this service and see it
+apply configuration changes without stopping!
+
+Features
+========
+- Service primitive for composing large (or small) apps from simple components
+- Dynamic configuration loaded from regular Python source files
+- Runner and service manager tool for easy, consistent usage and deployment
+- Integrated support for standard Python logging
+
+User Guide
+==========
 
 .. toctree::
    :maxdepth: 2
-   
 
-Indices and tables
-==================
+   user/intro
+   user/install
+   user/quickstart
+   user/advanced
 
-* :ref:`genindex`
-* :ref:`modindex`
+API Reference
+=============
+
+.. toctree::
+   :maxdepth: 2
+
+   api
+
+Developer Guide
+===============
+
+.. toctree::
+   :maxdepth: 1
+
+   dev/internals
+   dev/todo
+   dev/authors
+
+
 * :ref:`search`
 
