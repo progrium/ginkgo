@@ -1,10 +1,9 @@
 .virtualenv
 NOTES
-gservice.egg-info
 *.log
 *.pid
 .coverage
-
+docs/_build
 
 .DS_Store
 *.py[co]

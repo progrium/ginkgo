@@ -80,6 +80,3 @@ Developer Guide
    dev/todo
    dev/authors
 
-
-* :ref:`search`
-
