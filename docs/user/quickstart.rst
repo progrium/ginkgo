@@ -34,10 +34,12 @@ With this module you now have a configurable, daemonizable server ready to be
 deployed. Ginkgo gives you a simple runner to execute your app:
 
 ::
+
     $ ginkgo server.NumberServer
 
 As well as a more full featured service management tool:
 
 ::
+
     $ ginkgoctl server.NumberServer start
 

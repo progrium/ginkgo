@@ -11,6 +11,7 @@ mostly self-contained module of your application that can start/stop/reload,
 contain other services, manage async operations, and expose configuration.
 
 ::
+
     class ExampleService(Service):
         setting = Setting("example.setting", default="Foobar")
 
