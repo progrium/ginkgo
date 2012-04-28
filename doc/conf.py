@@ -40,8 +40,8 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'gevent-tools'
-copyright = u'2011, Jeff Lindsay'
+project = u'ginkgo'
+copyright = u'2012, Jeff Lindsay'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
