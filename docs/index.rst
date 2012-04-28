@@ -5,48 +5,41 @@ Ginkgo is a lightweight framework for writing network service daemons in
 Python. It currently focuses on gevent as its core networking and concurrency
 layer.
 
-Here's what writing a simple server application looks like:
+The core idea behind Ginkgo is the "service model", where your primary building
+block or component of applications are composable services. A service is a
+mostly self-contained module of your application that can start/stop/reload,
+contain other services, manage async operations, and expose configuration.
 
 ::
-
-    import random
-    from ginkgo import Service, Setting
-    from ginkgo.async.gevent import ServerWrapper
-
-    class NumberServer(Service):
-        """TCP server that emits random numbers"""
-
-        address = Setting("numbers.bind", default=('0.0.0.0', 7776))
-        emit_rate = Setting("numbers.rate_per_min", default=60)
+    class ExampleService(Service):
+        setting = Setting("example.setting", default="Foobar")
 
         def __init__(self):
-            self.add_service(ServerWrapper(
-                    StreamServer(self.address, self.handle)))
+            logging.info("Service is initializing.")
 
-        def handle(self, socket, address):
-            while True:
-                try:
-                    number = random.randint(0, 10)
-                    socket.send("{}\n".format(number))
-                    self.async.sleep(60 / self.emit_rate)
-                except IOError:
-                    break # Connection lost
+            self.subservice = AnotherService(self.setting)
+            self.add_service(self.subservice)
 
-With this module you now have a configurable, daemonizable server ready to be
-deployed. Ginkgo gives you a simple runner to execute your app:
+        def do_start(self):
+            logging.info("Service is starting.")
 
-    $ ginkgo server.NumberServer
+            self.spawn(self.something_async)
 
-As well as a more full featured service management tool:
+        def do_stop(self):
+            logging.info("Service is stopping.")
 
-    $ ginkgoctl server.NumberServer start
+        def do_reload(self):
+            logging.info("Service is reloading.")
 
-Check out the Quickstart to see how you can reload this service and see it
-apply configuration changes without stopping!
+        # ...
+
+Around this little bit of structure and convention, Ginkgo provides just a few
+baseline features to make building both complex and simple network daemons much
+easier.
 
 Features
 ========
-- Service primitive for composing large (or small) apps from simple components
+- Service class primitive for composing daemon apps from simple components
 - Dynamic configuration loaded from regular Python source files
 - Runner and service manager tool for easy, consistent usage and deployment
 - Integrated support for standard Python logging
