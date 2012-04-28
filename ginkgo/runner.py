@@ -13,6 +13,8 @@ import ginkgo.util
 STOP_SIGNAL = signal.SIGTERM
 RELOAD_SIGNAL = signal.SIGHUP
 
+sys.path.insert(0, os.getcwd())
+
 logger = logging.getLogger(__name__)
 
 def run_ginkgo():
@@ -112,8 +114,8 @@ def load_class(class_path):
     try:
         return module[class_name]
     except KeyError, e:
-        raise RuntimeError("Unable to load class path: {}:\n{}".format(
-            class_path, e))
+        raise RuntimeError("Unable to find class in module: {}".format(
+            class_path))
 
 def prepare_app(target):
     if os.path.exists(target):
