@@ -12,6 +12,7 @@ class Config(object):
     """
     _settings = {}
     _descriptors = []
+    _forced_settings = set()
     _last_file = None
 
     def _normalize_path(self, path):
@@ -21,9 +22,14 @@ class Config(object):
         """gets the current value of a setting"""
         return self._settings.get(self._normalize_path(path), default)
 
-    def set(self, path, value):
+    def set(self, path, value, force=False):
         """sets the value of a setting"""
-        self._settings[self._normalize_path(path)] = value
+        path = self._normalize_path(path)
+        if force or path not in self._forced_settings:
+            self._settings[self._normalize_path(path)] = value
+            if force:
+                self._forced_settings.add(path)
+
 
     def group(self, path=''):
         """returns a Group object for the given path"""

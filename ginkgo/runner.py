@@ -63,7 +63,7 @@ def run_ginkgoctl():
     args = parser.parse_args()
     if args.pid and args.target:
         parser.error("You cannot specify both a target and a pid")
-    ginkgo.settings.set("daemon", True)
+    ginkgo.settings.set("daemon", True, force=True)
     try:
         if args.action in "start restart log logtail".split():
             if not args.target:
