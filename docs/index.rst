@@ -1,6 +1,10 @@
 Ginkgo Service Framework
 ========================
 
+| Release: v\ |version| (:ref:`Installation <install>`)
+| License: MIT
+
+
 Ginkgo is a lightweight framework for writing network service daemons in
 Python. It currently focuses on gevent as its core networking and concurrency
 layer.
@@ -18,8 +22,8 @@ contain other services, manage async operations, and expose configuration.
         def __init__(self):
             logging.info("Service is initializing.")
 
-            self.subservice = AnotherService(self.setting)
-            self.add_service(self.subservice)
+            self.child_service = AnotherService()
+            self.add_service(self.child_service)
 
         def do_start(self):
             logging.info("Service is starting.")

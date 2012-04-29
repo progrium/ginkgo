@@ -5,9 +5,7 @@ Before you get started, be sure you have Ginkgo installed.
 
 Hello World Service
 -------------------
-The simplest service you could write looks something like this:
-
-::
+The simplest service you could write looks something like this::
 
     from ginkgo import Service
 
@@ -20,9 +18,7 @@ The simplest service you could write looks something like this:
                 print "Hello World"
                 self.async.sleep(1)
 
-If you save this as *service.py* you can run it with the Ginkgo runner:
-
-::
+If you save this as *service.py* you can run it with the Ginkgo runner::
 
     $ ginkgo service.HelloWorld
 
@@ -32,16 +28,12 @@ To stop your service, hit Ctrl+C.
 
 Using Configuration
 -------------------
-Add the ``-h`` argument flag to our runner call:
-
-::
+Add the ``-h`` argument flag to our runner call::
 
     $ ginkgo service.HelloWorld -h
 
 You'll see that the ``ginkgo`` runner command itself is very simple, but what's
-interesting is the last section:
-
-::
+interesting is the last section::
 
     config settings:
       daemon         True or False whether to daemonize [False]
@@ -58,9 +50,7 @@ interesting is the last section:
 
 These are builtin settings and their default values. If you want to set any of
 these, you have to create a configuration file. But you can also create your
-own settings, so let's first change our Hello World service to be configurable:
-
-::
+own settings, so let's first change our Hello World service to be configurable::
 
     from ginkgo import Service, Setting
 
@@ -77,9 +67,7 @@ own settings, so let's first change our Hello World service to be configurable:
                 self.async.sleep(1)
 
 Running ``ginkgo service.HelloWorld -h`` again should now include your new
-setting. Let's create a configuration file now called *service.conf.py*:
-
-::
+setting. Let's create a configuration file now called *service.conf.py*::
 
     import os
     daemon = bool(os.environ.get("DAEMONIZE", False))
@@ -91,9 +79,7 @@ variables of any type using the setting name to set them.
 
 There's a special setting calling ``service`` that must be set, which is the
 class path target telling it what service to run. To run with this
-configuration, you just point ``ginkgo`` to the configuration file:
-
-::
+configuration, you just point ``ginkgo`` to the configuration file::
 
     $ ginkgo service.conf.py
 
@@ -102,16 +88,12 @@ And it should start and you should see "Services all the way down" repeating.
 You don't have direct access to set config settings from the ``ginkgo`` tool,
 but you can set values in your config to pull from the environment. For
 example, our configuration above lets us force our service to daemonize by
-setting the ``DAEMONIZE`` environment variable.
-
-::
+setting the ``DAEMONIZE`` environment variable::
 
     $ DAEMONIZE=yes ginkgo service.conf.py
 
 To stop the daemonized process, you can manually kill it or use the service
-management tool ``ginkgoctl``:
-
-::
+management tool ``ginkgoctl``::
 
     $ ginkgoctl service.conf.py stop
 
@@ -174,9 +156,7 @@ descriptor, you may not need to do anything -- the value will just update in
 real-time.
 
 Let's see this in action. We'll change our Hello World service to have a
-``rate_per_minute`` setting that will be used for our delay between messages.
-
-::
+``rate_per_minute`` setting that will be used for our delay between messages::
 
     from ginkgo import Service, Setting
 
@@ -196,9 +176,7 @@ Let's see this in action. We'll change our Hello World service to have a
                 self.async.sleep(60.0 / self.rate)
 
 The default is 60 messages a minute, which results in the same behavior as
-before. So let's change our configuration to use a different rate:
-
-::
+before. So let's change our configuration to use a different rate::
 
     import os
     daemon = bool(os.environ.get("DAEMONIZE", False))
@@ -206,18 +184,14 @@ before. So let's change our configuration to use a different rate:
     rate_per_minute = 180
     service = "service.HelloWorld"
 
-Use ``ginkgo`` to start the service:
-
-::
+Use ``ginkgo`` to start the service::
 
     $ ginkgo service.conf.py
 
 As you can see, it's emitting messages a bit faster now. About 3 per second.
 Now while that's running, open the configuration file and change
 rate_per_minute to some other value. Then, in another terminal, change to that
-directory and reload:
-
-::
+directory and reload::
 
     $ ginkgoctl service.conf.py reload
 
@@ -232,9 +206,7 @@ defaults. We even support reloading logging configuration.
 Out of the box, you can just start logging. We encourage you to use the common
 convention of module level loggers, but obviously there is a lot of freedom in
 how you use Python logging. Let's add some logging to our Hello World,
-including changing our print call to a logger call as it's better practice:
-
-::
+including changing our print call to a logger call as it's better practice::
 
     import logging
     from ginkgo import Service, Setting
@@ -260,9 +232,7 @@ including changing our print call to a logger call as it's better practice:
                 logger.info(self.message)
                 self.async.sleep(60.0 / self.rate)
 
-Let's run it with our existing configuration for a bit and then stop:
-
-::
+Let's run it with our existing configuration for a bit and then stop::
 
     $ ginkgo service.conf.py
     Starting process with service.conf.py...
