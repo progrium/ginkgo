@@ -36,10 +36,8 @@ contain other services, manage async operations, and expose configuration.
 
 Around this little bit of structure and convention, Ginkgo provides just a few
 baseline features to make building both complex and simple network daemons much
-easier.
+easier:
 
-Features
-========
 - Service class primitive for composing daemon apps from simple components
 - Dynamic configuration loaded from regular Python source files
 - Runner and service manager tool for easy, consistent usage and deployment

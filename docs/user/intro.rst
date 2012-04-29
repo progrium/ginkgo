@@ -35,3 +35,23 @@ While Ginkgo will remain focused on "baseline" features common to pretty much
 all network daemons, a supplementary project to act as a "standard library" for
 Ginkgo applications is planned. Together with Ginkgo, the vision would be to
 quickly "throw together" distributed systems from simple primitives.
+
+Inspiration
+-----------
+Most of Ginkgo was envisioned by taking good ideas from other projects,
+simplifying to their essential properties, and integrating them together. A lot
+of thanks goes out to these projects.
+
+Twisted is the first great Python evented daemon framework. The two big ideas
+borrowed from Twisted are their application framework and twistd. They directly
+inspired the service model and the Ginkgo runner.
+
+Trac is known for the problem it solves, and not so much for its great
+architecture. However, its component model and configuration API were a big
+influence on Ginkgo. Trac components are how we think of Ginkgo services, and
+the way Ginkgo defines configuration settings is directly inspired by the Trac
+configuration API.
+
+These projects also had some influence on Ginkgo's design and philosophy:
+Gunicorn, Mongrel, Apache, Django, Flask, python-daemon, Diesel, Tornado,
+Erlang/OTP, Typeface, Akka, Configgy, Ostrich, and others.
