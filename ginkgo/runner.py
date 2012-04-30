@@ -118,13 +118,17 @@ def load_class(class_path):
             class_path))
 
 def prepare_app(target):
-    if os.path.exists(target):
-        config = ginkgo.settings.load_file(target)
-        try:
-            service_factory = config['service']
-        except KeyError:
+    if target.endswith('.py'):
+        if os.path.exists(target):
+            config = ginkgo.settings.load_file(target)
+            try:
+                service_factory = config['service']
+            except KeyError:
+                raise RuntimeError(
+                    "Configuration does not specify a service factory")
+        else:
             raise RuntimeError(
-                "Configuration does not specify a service factory")
+                'Configuration file %s does not exist' % target)
     else:
         service_factory = target
     if isinstance(service_factory, str):
