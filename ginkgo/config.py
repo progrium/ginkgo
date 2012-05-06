@@ -54,7 +54,8 @@ class Config(object):
 
     def reload_file(self):
         """reloads the last loaded configuration from load_file"""
-        return self.load_file(self._last_file)
+        if self._last_file:
+            return self.load_file(self._last_file)
 
     def load(self, config_dict):
         """loads a dictionary into settings"""
