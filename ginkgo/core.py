@@ -152,9 +152,16 @@ class BasicService(object):
         return
 
     def reload(self):
-        for child in self._children:
-            child.reload()
-        self.do_reload()
+        def _reload_children():
+            for child in self._children:
+                child.reload()
+
+        if self.start_before:
+            self.do_reload()
+            _reload_children()
+        else:
+            _reload_children()
+            self.do_reload()
 
     def do_reload(self):
         """Empty implementation of service reload. Implement me!"""
