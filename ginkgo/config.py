@@ -43,12 +43,18 @@ class Config(object):
 
     def load_module(self, module_path):
         """loads a module as configuration given a module path"""
-        return self.load(runpy.run_module(module_path))
+        try:
+            return self.load(runpy.run_module(module_path))
+        except Exception, e:
+            raise RuntimeError("Config error: {}".format(e))
 
     def load_file(self, file_path):
         """loads a module as configuration given a file path"""
         file_path = os.path.abspath(os.path.expanduser(file_path))
-        config_dict = runpy.run_path(file_path)
+        try:
+            config_dict = runpy.run_path(file_path)
+        except Exception, e:
+            raise RuntimeError("Config error: {}".format(e))
         self._last_file = file_path
         return self.load(config_dict)
 

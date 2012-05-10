@@ -288,8 +288,11 @@ class Process(ginkgo.core.Service):
             self.pidfile.unlink()
 
     def do_reload(self):
-        self.config.reload_file()
-        self.logger.load_config()
+        try:
+            self.config.reload_file()
+            self.logger.load_config()
+        except RuntimeError, e:
+            logger.warn(e)
 
     def trigger_hook(self, name, *args, **kwargs):
         """ Experimental """
