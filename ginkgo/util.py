@@ -1,23 +1,14 @@
-try:
-    import ctypes
-except MemoryError:
-    # selinux execmem denial
-    # https://bugzilla.redhat.com/show_bug.cgi?id=488396
-    ctypes = None
-except ImportError:
-    # Python on Solaris compiled with Sun Studio doesn't have ctypes
-    ctypes = None
+"""Utility functions and classes
 
+This module contains functions and classes that are shared across modules or
+are more general utilities that aren't specific to Ginkgo. This way we keep
+Ginkgo modules very dense in readable domain specific code.
+"""
 import resource
 import os
 import errno
 import tempfile
 
-MAXFD = 1024
-if (hasattr(os, "devnull")):
-   DEVNULL = os.devnull
-else:
-   DEVNULL = "/dev/null"
 
 class defaultproperty(object):
     """
@@ -43,17 +34,34 @@ class defaultproperty(object):
                     instance.__dict__[key] = newval
                     return newval
 
-def get_maxfd():
-    maxfd = resource.getrlimit(resource.RLIMIT_NOFILE)[1]
-    if (maxfd == resource.RLIM_INFINITY):
-        maxfd = MAXFD
-    return maxfd
 
 def daemonize(preserve_fds=None):
     """\
     Standard daemonization of a process.
     http://www.svbug.com/documentation/comp.unix.programmer-FAQ/faq_2.html#SEC16
     """
+    def _maxfd(limit=1024):
+        maxfd = resource.getrlimit(resource.RLIMIT_NOFILE)[1]
+        if maxfd == resource.RLIM_INFINITY:
+            return limit
+        else:
+            return maxfd
+
+    def _devnull(default="/dev/null"):
+        if hasattr(os, "devnull"):
+            return os.devnull
+        else:
+            return default
+
+    def _close_fds(preserve=None):
+        preserve = preserve or []
+        for fd in xrange(0, _maxfd()):
+            if fd not in preserve:
+                try:
+                    os.close(fd)
+                except OSError: # fd wasn't open to begin with (ignored)
+                    pass
+
     if os.fork():
         os._exit(0)
     os.setsid()
@@ -62,16 +70,9 @@ def daemonize(preserve_fds=None):
         os._exit(0)
 
     os.umask(0)
-    maxfd = get_maxfd()
-    preserve_fds = preserve_fds or []
-    for fd in xrange(0, maxfd):
-        if fd not in preserve_fds:
-            try:
-                os.close(fd)
-            except OSError: # fd wasn't open to begin with (ignored)
-                pass
+    _close_fds(preserve_fds)
 
-    os.open(DEVNULL, os.O_RDWR)
+    os.open(_devnull(), os.O_RDWR)
     os.dup2(0, 1)
     os.dup2(0, 2)
 
