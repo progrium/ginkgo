@@ -279,10 +279,8 @@ Here's what writing a simple server application looks like:
 
     import random
 
-    from gevent.server import StreamServer
-
     from ginkgo import Service, Setting
-    from ginkgo.async.gevent import ServerWrapper
+    from ginkgo.async import gevent
 
     class NumberServer(Service):
         """TCP server that emits random numbers"""
@@ -291,8 +289,8 @@ Here's what writing a simple server application looks like:
         emit_rate = Setting("numbers.rate_per_min", default=60)
 
         def __init__(self):
-            self.add_service(ServerWrapper(
-                    StreamServer(self.address, self.handle)))
+            self.add_service(
+                    gevent.StreamServer(self.address, self.handle))
 
         def handle(self, socket, address):
             while True:

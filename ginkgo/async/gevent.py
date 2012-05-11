@@ -4,6 +4,14 @@ This module provides the `AsyncManager` for gevent, as well as other utilities
 useful for building gevent based Ginkgo apps. Obviously, this is the only async
 module at the moment.
 
+Of note, this module provides wrapped versions of the gevent bundled servers
+that should be used instead of the gevent classes. These wrapped classes adapt
+gevent servers to be Ginkgo services. They currently include:
+
+    * StreamServer
+    * WSGIServer (based on the pywsgi.WSGIServer)
+    * BackdoorServer
+
 """
 from __future__ import absolute_import
 
@@ -13,9 +21,14 @@ import gevent.queue
 import gevent.timeout
 import gevent.pool
 import gevent.baseserver
+import gevent.socket
+
+import gevent.backdoor
+import gevent.server
+import gevent.pywsgi
 
 from ..core import BasicService, Service
-from ..util import defaultproperty
+from ..util import defaultproperty, ObjectWrapper
 from ..async import AbstractAsyncManager
 
 class AsyncManager(AbstractAsyncManager):
@@ -60,6 +73,8 @@ class AsyncManager(AbstractAsyncManager):
 class ServerWrapper(Service):
     """Wrapper for gevent servers that are based on gevent.baseserver.BaseServer
 
+    DEPRECATED: Please use the pre-wrapped gevent servers in the same module.
+
     Although BaseServer objects mostly look like they have the Service interface,
     there are certain extra methods (like reload, service_name, etc) that are assumed
     to be available. This class allows us to wrap gevent servers so they actually
@@ -89,3 +104,44 @@ class ServerWrapper(Service):
 
     def do_stop(self):
         self.wrapped.stop()
+
+class StreamClient(Service):
+    """StreamServer-like TCP client service"""
+
+    def __init__(self, address, handler=None):
+        self.address = address
+        self.handler = handler
+
+    def do_start(self):
+        self.spawn(self.connect)
+
+    def connect(self):
+        self.handle(
+            gevent.socket.create_connection(self.address))
+
+    def handle(self, socket):
+        if self.handler:
+            self.handler(socket)
+
+class _ServerWrapper(Service, ObjectWrapper):
+    server = state = __subject__ = None
+    _children = []
+
+    def __init__(self, *args, **kwargs):
+        self.server = self.server(*args, **kwargs)
+        ObjectWrapper.__init__(self, self.server)
+
+    def do_start(self):
+        self.spawn(self.server.start)
+
+    def do_stop(self):
+        self.server.stop()
+
+class StreamServer(_ServerWrapper):
+    server = gevent.server.StreamServer
+
+class WSGIServer(_ServerWrapper):
+    server = gevent.pywsgi.WSGIServer
+
+class BackdoorServer(_ServerWrapper):
+    server = gevent.backdoor.BackdoorServer
