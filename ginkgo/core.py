@@ -1,3 +1,18 @@
+"""Ginkgo service core
+
+This module implements the core service model and several convenience
+decorators to use with your services. The primary export of this module is
+`Service`, but much of the implementation is in `BasicService`. `BasicService`
+uses a simple state machine defined by `ServiceStateMachine` and implements the
+core service interface.
+
+`BasicService` assumes no async model, whereas `Service` creates an
+`AsyncManager` from a driver in the `async` module. It's assumed the common
+case is to create async applications, but there are cases when you need a
+`Service` with no async. For example, `AsyncManager` classes inherit from
+`BasicService`, otherwise there would be a circular dependency.
+
+"""
 import functools
 import runpy
 

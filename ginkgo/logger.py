@@ -1,3 +1,11 @@
+"""Ginkgo logger
+
+This module provides the class for a logger object used by the runner module's
+`Process` object to manage, configure, and provide services around Python's
+standard logging module. Most notably it allows you to easily configure the
+Python logger using Ginkgo configuration.
+
+"""
 import logging
 import logging.config
 import os

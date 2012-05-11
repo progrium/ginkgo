@@ -1,3 +1,24 @@
+"""Ginkgo config
+
+This module provides the class for a `Config` object, which represents an
+application configuration, often loaded by a configuration file. This is used
+by the runner module's `Process` object, but can be used completely
+independently.
+
+Configuration is described and accessed by Setting descriptors in your
+application. Configuration values can then be set by Python configuration
+files. However, using configuration files is completely optional. You can
+expose configuration to the end-user via command-line arguments, then load them
+into the `Config` object via `load()`.
+
+By default, Ginkgo creates a `Config` object singleton to use in your
+applications that you can import with `from ginkgo import settings`. You should
+only have to create a `Config` object in testing scenarios. Ginkgo also
+provides a shortcut for creating Setting descriptors associated with this
+singleton that you can import with `from ginkgo import Setting`. Often, this is
+the only API you need to use Ginkgo config.
+
+"""
 import os.path
 import util
 import re

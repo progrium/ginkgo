@@ -1,3 +1,10 @@
+"""Gevent async module
+
+This module provides the `AsyncManager` for gevent, as well as other utilities
+useful for building gevent based Ginkgo apps. Obviously, this is the only async
+module at the moment.
+
+"""
 from __future__ import absolute_import
 
 import gevent
@@ -9,8 +16,9 @@ import gevent.baseserver
 
 from ..core import BasicService, Service
 from ..util import defaultproperty
+from ..async import AbstractAsyncManager
 
-class AsyncManager(BasicService):
+class AsyncManager(AbstractAsyncManager):
     """Starting with just gevent"""
     stop_timeout = defaultproperty(int, 1)
 

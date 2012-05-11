@@ -1,3 +1,23 @@
+"""Ginkgo runner
+
+The runner module is responsible for creating a "container" to run services in
+and tools to manage that container. The container is itself a service based on
+a class called `Process`, which is intended to model the running process that
+contains the service. The process service takes an application service to run,
+associates a configuration with this "container", and then initializes the
+process to daemonize. This `Process` object is then assigned as a toplevel
+singleton, which you can use as a reference to the top of the service tree.
+
+The `ControlInterface` class models the commands you can use to start or
+control a daemonized service. This is exposed via two command line utilities
+`ginkgo` and `ginkgoctl`, both of which have their entry points defined in this
+module.
+
+The runner module and Ginkgo command line utilities are completely optional.
+You can always just write your own Python script or console command that takes
+your application service and calls `serve_forever()` on it.
+
+"""
 import argparse
 import logging
 import os

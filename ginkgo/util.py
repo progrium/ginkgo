@@ -1,4 +1,4 @@
-"""Utility functions and classes
+"""Ginkgo utility functions and classes
 
 This module contains functions and classes that are shared across modules or
 are more general utilities that aren't specific to Ginkgo. This way we keep
