@@ -4,6 +4,7 @@ NOTES
 *.pid
 .coverage
 docs/_build
+.tox
 
 .DS_Store
 *.py[co]
