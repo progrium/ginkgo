@@ -1,6 +1,6 @@
 """Ginkgo runner
 
-The runner module is responsible for creating a "container" to run services in
+The runner module is responsible for creating a "container" to run services in,
 and tools to manage that container. The container is itself a service based on
 a class called `Process`, which is intended to model the running process that
 contains the service. The process service takes an application service to run,
@@ -44,6 +44,9 @@ def run_ginkgo():
     parser.add_argument("-h", "--help", action="store_true", help="""
         show program's help text and exit
         """.strip())
+    parser.add_argument("-d", "--daemonize", action="store_true", help="""
+        daemonize the service process
+        """.strip())
     parser.add_argument("target", nargs='?', help="""
         service class path to run (modulename.ServiceClass) or
         configuration file path to use (/path/to/config.py)
@@ -54,14 +57,14 @@ def run_ginkgo():
         if args.target:
             print # blank line
             try:
-                app = prepare_app(args.target)
+                app = setup_process(args.target)
                 app.config.print_help()
             except RuntimeError, e:
                 parser.error(e)
     else:
         if args.target:
             try:
-                ControlInterface().start(args.target)
+                ControlInterface().start(args.target, args.daemonize)
             except RuntimeError, e:
                 parser.error(e)
         else:
@@ -83,7 +86,6 @@ def run_ginkgoctl():
     args = parser.parse_args()
     if args.pid and args.target:
         parser.error("You cannot specify both a target and a pid")
-    ginkgo.settings.set("daemon", True, force=True)
     try:
         if args.action in "start restart log logtail".split():
             if not args.target:
@@ -98,7 +100,7 @@ def resolve_pid(pid=None, target=None):
     if pid and not os.path.exists(pid):
         return int(pid)
     if target is not None:
-        prepare_app(target)
+        setup_process(target, daemonize=True)
         pid = ginkgo.settings.get("pidfile")
     if pid is not None:
         if os.path.exists(pid):
@@ -137,12 +139,12 @@ def load_class(class_path):
         raise RuntimeError("Unable to find class in module: {}".format(
             class_path))
 
-def prepare_app(target):
+def resolve_target(target):
     if target.endswith('.py'):
         if os.path.exists(target):
             config = ginkgo.settings.load_file(target)
             try:
-                service_factory = config['service']
+                return config['service']
             except KeyError:
                 raise RuntimeError(
                     "Configuration does not specify a service factory")
@@ -150,18 +152,25 @@ def prepare_app(target):
             raise RuntimeError(
                 'Configuration file %s does not exist' % target)
     else:
-        service_factory = target
+        return target
+
+def setup_process(target, daemonize=True):
+    service_factory = resolve_target(target)
     if isinstance(service_factory, str):
         service_factory = load_class(service_factory)
+
     if callable(service_factory):
-        return Process(service_factory)
+        if daemonize:
+            return DaemonProcess(service_factory)
+        else:
+            return Process(service_factory)
     else:
         raise RuntimeError("Does not appear to be a valid service factory")
 
 class ControlInterface(object):
-    def start(self, target):
+    def start(self, target, daemonize=True):
         print "Starting process with {}...".format(target)
-        app = prepare_app(target)
+        app = setup_process(target, daemonize)
         try:
             app.serve_forever()
         except KeyboardInterrupt:
@@ -195,12 +204,12 @@ class ControlInterface(object):
             print "Process is NOT running."
 
     def log(self, target):
-        app = prepare_app(target)
+        app = setup_process(target)
         app.logger.print_log()
 
     def logtail(self, target):
         try:
-            app = prepare_app(target)
+            app = setup_process(target)
             app.logger.tail_log()
         except KeyboardInterrupt:
             pass
@@ -208,12 +217,6 @@ class ControlInterface(object):
 class Process(ginkgo.core.Service):
     start_before = True
 
-    daemon = ginkgo.Setting("daemon", default=False, help="""
-        True or False whether to daemonize
-        """)
-    pidfile = ginkgo.Setting("pidfile", default=None, help="""
-        Path to pidfile to use when daemonizing
-        """)
     rundir = ginkgo.Setting("rundir", default=None, help="""
         Change to a directory before running
         """)
@@ -234,14 +237,6 @@ class Process(ginkgo.core.Service):
         self.config = config or ginkgo.settings
         self.logger = ginkgo.logger.Logger(self)
 
-        if self.pidfile is not False:
-            if self.pidfile is None:
-                self.config.set("pidfile",
-                        "/tmp/{}.pid".format(self.service_name))
-            self.pidfile = ginkgo.util.Pidfile(str(self.pidfile))
-        else:
-            self.pidfile = None
-
         self.pid = os.getpid()
         self.uid = os.geteuid()
         self.gid = os.getegid()
@@ -261,16 +256,6 @@ class Process(ginkgo.core.Service):
             return self.app.service_name
 
     def do_start(self):
-        if self.daemon:
-            ginkgo.util.prevent_core_dump()
-            ginkgo.util.daemonize(
-                preserve_fds=self.logger.file_descriptors)
-            self.logger.capture_stdio()
-            self.pid = os.getpid()
-
-        if self.pidfile:
-            self.pidfile.create(self.pid)
-
         if self.umask is not None:
             os.umask(self.umask)
 
@@ -304,8 +289,6 @@ class Process(ginkgo.core.Service):
     def do_stop(self):
         logger.info("Stopping.")
         self.logger.shutdown()
-        if self.pidfile:
-            self.pidfile.unlink()
 
     def do_reload(self):
         try:
@@ -329,3 +312,32 @@ class Process(ginkgo.core.Service):
 
     def __exit__(self, type, value, traceback):
         ginkgo.pop_process()
+
+
+class DaemonProcess(Process):
+    pidfile = ginkgo.Setting("pidfile", default=None, help="""
+        Path to pidfile to use when daemonizing
+        """)
+
+    def __init__(self, app_factory, config=None):
+        super(DaemonProcess, self).__init__(app_factory, config)
+
+        if self.pidfile is None:
+            self.config.set("pidfile", os.path.expanduser(
+                            "~/.{}.pid".format(self.service_name)))
+        self.pidfile = ginkgo.util.Pidfile(str(self.pidfile))
+
+
+    def do_start(self):
+        ginkgo.util.prevent_core_dump()
+        ginkgo.util.daemonize(
+            preserve_fds=self.logger.file_descriptors)
+        self.logger.capture_stdio()
+        self.pid = os.getpid()
+        self.pidfile.create(self.pid)
+        super(DaemonProcess, self).do_start()
+
+    def do_stop(self):
+        super(DaemonProcess, self).do_stop()
+        self.pidfile.unlink()
+
