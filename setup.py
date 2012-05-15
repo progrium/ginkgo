@@ -11,7 +11,10 @@ setup(
     author_email='jeff.lindsay@twilio.com',
     description='Lightweight service framework',
     packages=find_packages(),
+    setup_requires=['nose'],
     install_requires=['gevent>=0.13'],
+    tests_require=['nose'],
+    test_suite='nose.collector',
     data_files=[],
     entry_points={
         'console_scripts': [
