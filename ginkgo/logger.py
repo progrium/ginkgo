@@ -33,19 +33,14 @@ class Logger(object):
         self.process = process
 
         if self.logfile is None:
-            self.process.config.set("logfile",
-                    "/tmp/{}.log".format(process.service_name))
+            process.config.set("logfile", os.path.expanduser(
+                               "~/.{}.log".format(process.service_name)))
 
         self.load_config()
 
     def load_config(self):
         if self.config is None:
-            default_config = dict(
-                format=DEFAULT_FORMAT,
-                level=getattr(logging, self.loglevel.upper()))
-            if self.process.daemon:
-                default_config['filename'] = self.logfile
-            self._reset_basic_config(default_config)
+            self._load_default_config()
         else:
             if isinstance(self.config, str) and os.path.exists(self.config):
                 logging.config.fileConfig(self.config)
@@ -53,6 +48,14 @@ class Logger(object):
                 logging.config.dictConfig(self.config)
             else:
                 self._reset_basic_config(self.config)
+
+    def _load_default_config(self):
+        default_config = dict(
+            format=DEFAULT_FORMAT,
+            level=getattr(logging, self.loglevel.upper()))
+        if hasattr(self.process, 'pidfile'):
+            default_config['filename'] = self.logfile
+        self._reset_basic_config(default_config)
 
     def _reset_basic_config(self, config):
         for h in logging.root.handlers[:]:

@@ -247,6 +247,9 @@ class Process(ginkgo.core.Service):
     @property
     def service_name(self):
         if self.app is None:
+            # if the factory callable is called "service"
+            # we need something better to name it, so we try
+            # using first word of docstring if available
             if self.app_factory.__name__ == 'service':
                 name = self.app_factory.__doc__ or self.app_factory.__name__
                 return name.split(' ', 1)[0]

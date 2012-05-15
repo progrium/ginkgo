@@ -4,7 +4,7 @@ from ginkgo import Setting
 
 
 delay = 1
-logconfig = {"filename": "/tmp/MyService.log", "level": logging.DEBUG}
+#logconfig = {"filename": "/tmp/MyService.log", "level": logging.DEBUG}
 
 class MyService(_Service):
     foo = Setting("foo", default=("foo", 12), help="This is foo")
