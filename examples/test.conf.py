@@ -1,3 +1,8 @@
+##
+## This is not actually a good example! It's being used for testing
+## purposes since there are no tests yet...
+##
+
 import logging
 from ginkgo import Service as _Service
 from ginkgo import Setting
@@ -5,6 +10,14 @@ from ginkgo import Setting
 
 delay = 1
 #logconfig = {"filename": "/tmp/MyService.log", "level": logging.DEBUG}
+
+class flask:
+    debug = False
+    testing = True
+    secret_key = "woifh28fhw93fh"
+
+    class subgroup:
+        foo = "bar"
 
 class MyService(_Service):
     foo = Setting("foo", default=("foo", 12), help="This is foo")

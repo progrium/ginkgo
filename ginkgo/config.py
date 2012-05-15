@@ -19,6 +19,7 @@ singleton that you can import with `from ginkgo import Setting`. Often, this is
 the only API you need to use Ginkgo config.
 
 """
+import collections
 import os.path
 import util
 import re
@@ -53,8 +54,9 @@ class Config(object):
 
 
     def group(self, path=''):
-        """returns a Group object for the given path"""
-        return Group(self, path)
+        """returns a Group object for the given path if exists"""
+        if path not in self._settings:
+            return Group(self, path)
 
     def setting(self, *args, **kwargs):
         """returns a _Setting descriptor attached to this configuration"""
@@ -111,7 +113,7 @@ class Config(object):
                     d.path, d.help.replace('\n', '\n'+' '*18), value)
 
 
-class Group(object):
+class Group(collections.Mapping):
     """Provides read-only access to a group of config data
 
     These objects represent a 'view' into a particular scope of the entire
@@ -129,7 +131,7 @@ class Group(object):
     some cases it is more convenient. You should usually use the `setting`
     function to embed config settings for particular values on relevant classes.
     """
-    def __init__(self, config, name):
+    def __init__(self, config, name=''):
         self._config = config
         self._name = name
 
@@ -145,7 +147,34 @@ class Group(object):
             return None
 
     def __repr__(self):
-        return 'Group[{}]'.format(self._name)
+        return 'Group[{}:{}]'.format(self._name, self._dict())
+
+    def _dict(self):
+        d = dict()
+        group_path = self._name + "."
+        for key in self._config._settings.keys():
+            if not self._name or key.startswith(group_path):
+                if self._name:
+                    key = key.split(group_path, 1)[-1]
+                name = key.split('.', 1)[0]
+                if name not in d:
+                    d[name] = getattr(self, name)
+        return d
+
+    # Mapping protocol
+
+    def __contains__(self, item):
+        return item in self._dict()
+
+    def __iter__(self):
+        return self._dict().__iter__()
+
+    def __len__(self):
+        return self._dict().__len__()
+
+    def __getitem__(self, key):
+        return getattr(self, key)
+
 
 
 class _Setting(object):
