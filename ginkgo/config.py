@@ -21,16 +21,22 @@ the only API you need to use Ginkgo config.
 """
 import collections
 import os.path
-import util
 import re
 import runpy
 
-class Config(object):
+import util
+
+class Config(util.GlobalContext):
     """Represents a collection of settings
 
     Provides access to a collection of settings that can be loaded from a
     Python module or file, or a dictionary. It allows classic-style classes to
     be used to indicate namespaces or groups, which can be nested.
+
+    As a `GlobalContext`, you can specify the location of a singleton by setting
+    `Config.singleton_attr` to a tuple of (object, attribute_name). Then any
+    `Config` instance will be a context manager that will temporarily set that
+    singleton to that instance.
     """
     _settings = {}
     _descriptors = []

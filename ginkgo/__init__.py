@@ -20,6 +20,8 @@ case building Ginkgo services::
                 self.async.sleep(1)
 
 """
+import sys
+
 from .core import Service
 from .config import Config
 
@@ -31,19 +33,8 @@ __all__ = ["Service", "Setting", "process", "settings"]
 
 process = None
 settings = Config()
-Setting = settings.setting
+Setting = lambda *args, **kwargs: settings.setting(*args, **kwargs)
 
-_processes = []
-def push_process(new_process):
-    """Internal function to set the process singleton"""
-    _processes.append(process)
-    process = new_process
-    settings = process.config
-    Setting = settings.setting
+# Set the singleton location for Config global context
+Config.singleton_attr = (sys.modules[__name__], 'settings')
 
-def pop_process():
-    """Internal function to unset the process singleton"""
-    if len(_processes):
-        process = _processes.pop()
-        settings = process.config
-        Setting = settings.setting

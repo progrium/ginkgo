@@ -214,7 +214,8 @@ class ControlInterface(object):
         except KeyboardInterrupt:
             pass
 
-class Process(ginkgo.core.Service):
+class Process(ginkgo.core.Service, ginkgo.util.GlobalContext):
+    singleton_attr = (ginkgo, 'process')
     start_before = True
 
     rundir = ginkgo.Setting("rundir", default=None, help="""
@@ -310,11 +311,13 @@ class Process(ginkgo.core.Service):
                 raise RuntimeError("Hook Error: {}".format(e))
 
     def __enter__(self):
-        ginkgo.push_process(self)
+        self.__class__._push_context(self)
+        Config._push_context(self.config)
         return self
 
     def __exit__(self, type, value, traceback):
-        ginkgo.pop_process()
+        Config._pop_context()
+        self.__class__._pop_context()
 
 
 class DaemonProcess(Process):
