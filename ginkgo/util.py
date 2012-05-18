@@ -152,6 +152,77 @@ class AbstractStateMachine(object):
         if new_state in self._waitables:
             self._waitables[new_state].set()
 
+
+class GlobalContext(object):
+    """Context manager mixin for stackable singletons
+
+    Use this mixin when a class has a global singleton set somewhere that can
+    be temporarily set while in the context of an instance of that class::
+
+        class Foo(GlobalContext):
+            instance = None  # where we'll keep the singleton
+            singleton_attr = (Foo, 'instance')  # tell mixin where it is
+
+        Foo.instance = Foo()  # set an initial Foo singleton
+        temporary_foo = Foo()  # create another Foo
+        # now use it as a context
+        with temporary_foo:
+            # the singleton will be set to this instance
+            assert Foo.instance is temporary_foo
+        # then set back when you exit the context
+        assert Foo.instance is not temporary_foo
+
+    You can also nest global contexts if necessary. The main API is just
+    setting where the singleton is with `singleton_attr`, which is a tuple of
+    (object, attribute name). If `singleton_attr` is not set, there is no
+    effect when you use the context manager. You can define `singleton_attr`
+    outside the class definition to decouple your class definition from your
+    use of a singleton. For example::
+
+        class Foo(GlobalContext):
+            pass
+
+        singleton = Foo()  # module level singleton
+        Foo.singleton_attr = (sys.modules[__name__], 'singleton')
+
+    """
+    singleton_attr = None
+    _singleton_stacks = {}
+
+    @classmethod
+    def _get_singleton(cls):
+        if cls.singleton_attr:
+            return getattr(*cls.singleton_attr)
+
+    @classmethod
+    def _set_singleton(cls, value):
+        if cls.singleton_attr:
+            setattr(*list(cls.singleton_attr)+[value])
+
+    @classmethod
+    def _push_context(cls, obj):
+        if cls.singleton_attr:
+            klass = cls.__name__
+            if klass not in cls._singleton_stacks:
+                cls._singleton_stacks[klass] = []
+            cls._singleton_stacks[klass].append(cls._get_singleton())
+            cls._set_singleton(obj)
+
+    @classmethod
+    def _pop_context(cls):
+        if cls.singleton_attr:
+            klass = cls.__name__
+            cls._set_singleton(
+                    cls._singleton_stacks.get(klass, []).pop())
+
+    def __enter__(self):
+        self.__class__._push_context(self)
+        return self
+
+    def __exit__(self, type, value, traceback):
+        self.__class__._pop_context()
+
+
 class Pidfile(object):
     """\
     Manage a PID file. If a specific name is provided
