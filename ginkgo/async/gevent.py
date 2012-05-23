@@ -32,7 +32,7 @@ from ..util import defaultproperty, ObjectWrapper
 from ..async import AbstractAsyncManager
 
 class AsyncManager(AbstractAsyncManager):
-    """Starting with just gevent"""
+    """Async primitives from gevent"""
     stop_timeout = defaultproperty(int, 1)
 
     def __init__(self):

@@ -192,11 +192,13 @@ class BasicService(object):
 
 
 class Service(BasicService):
-    async_available = ["ginkgo.async." + m for m in ("gevent", "threads")]
+    async_available = ["ginkgo.async." + m for m in ("gevent", "threads",
+                                                     "eventlet")]
     async = Setting("async", default="ginkgo.async.gevent", help="""\
         The async reactor to use. Available choices:
             ginkgo.async.gevent
             ginkgo.async.threads
+            ginkgo.async.eventlet
         """)
 
     def pre_init(self):
