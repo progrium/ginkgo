@@ -35,3 +35,9 @@ class AbstractAsyncManager(BasicService):
 
     def lock(self, *args, **kwargs):
         raise NotImplementedError()
+
+    def signal(self, *args, **kwargs):
+        return signal.signal(*args, **kwargs)
+
+    def init(self):
+        pass

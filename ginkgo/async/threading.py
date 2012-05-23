@@ -65,9 +65,3 @@ class AsyncManager(AbstractAsyncManager):
 
     def lock(self, *args, **kwargs):
         return threading.Lock(*args, **kwargs)
-
-    def signal(self, *args, **kwargs):
-        return signal.signal(*args, **kwargs)
-
-    def init(self):
-        pass

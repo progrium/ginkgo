@@ -52,12 +52,6 @@ class AsyncManager(BasicService):
     def lock(self, *args, **kwargs):
         return eventlet.semaphore.Semaphore(*args, **kwargs)
 
-    def signal(self, *args, **kwargs):
-        return signal.signal(*args, **kwargs)
-
-    def init(self):
-        pass
-
 class Event(eventlet.event.Event):
     def clear(self):
         if not self.ready():
