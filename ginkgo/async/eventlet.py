@@ -1,7 +1,5 @@
 from __future__ import absolute_import
 
-import signal
-
 import eventlet
 import eventlet.greenpool
 import eventlet.greenthread

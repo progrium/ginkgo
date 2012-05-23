@@ -3,7 +3,6 @@ from __future__ import absolute_import
 import threading
 import Queue
 import time
-import signal
 
 from ..util import defaultproperty
 from ..async import AbstractAsyncManager

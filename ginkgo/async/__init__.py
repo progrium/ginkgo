@@ -15,6 +15,7 @@ class definition::
         async = "path.to.different.module"
 
 """
+import signal
 from ..core import BasicService
 
 class AbstractAsyncManager(BasicService):
