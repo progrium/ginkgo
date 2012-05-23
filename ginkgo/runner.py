@@ -172,7 +172,8 @@ class ControlInterface(object):
         print "Starting process with {}...".format(target)
         app = setup_process(target, daemonize)
         try:
-            app.serve_forever()
+            app.start()
+            app.state.wait("stopped")
         except KeyboardInterrupt:
             pass
         finally:
@@ -269,13 +270,9 @@ class Process(ginkgo.core.Service, ginkgo.util.GlobalContext):
         self.app = self.app_factory()
         self.add_service(self.app)
 
-        # TODO: move this to async manager?
-        import gevent
-        gevent.reinit()
-
-        # TODO: upgrade to gevent 1.0 and use standard signal
-        gevent.signal(RELOAD_SIGNAL, self.reload)
-        gevent.signal(STOP_SIGNAL, self.stop)
+        self.async.init()
+        self.async.signal(RELOAD_SIGNAL, self.reload)
+        self.async.signal(STOP_SIGNAL, self.stop)
 
     def post_start(self):
         if self.user is not None:

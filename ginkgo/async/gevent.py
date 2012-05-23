@@ -69,6 +69,12 @@ class AsyncManager(AbstractAsyncManager):
     def lock(self, *args, **kwargs):
         return gevent.coros.Semaphore(*args, **kwargs)
 
+    def signal(self, *args, **kwargs):
+        gevent.signal(*args, **kwargs)
+
+    def init(self):
+        gevent.reinit()
+
 
 class ServerWrapper(Service):
     """Wrapper for gevent servers that are based on gevent.baseserver.BaseServer
