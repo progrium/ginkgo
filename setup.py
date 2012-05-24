@@ -11,7 +11,6 @@ setup(
     author_email='jeff.lindsay@twilio.com',
     description='Lightweight service framework',
     packages=find_packages(),
-    install_requires=["gevent>=0.13"],
     data_files=[],
     entry_points={
         'console_scripts': [
