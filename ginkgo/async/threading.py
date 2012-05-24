@@ -7,48 +7,77 @@ import time
 from ..util import defaultproperty
 from ..async import AbstractAsyncManager
 
+def _spin_wait(fn, timeout):
+    """ Spin-wait blocking only 1 second at a time so we don't miss signals """
+    elapsed = 0
+    while True:
+        if fn(timeout=1):
+            return True
+        elapsed += 1
+        if timeout is not None and elapsed >= timeout:
+            return False
+
+
 class Event(threading._Event):
     def wait(self, timeout=None):
-        # Use a spin-loop type of wait so that signals can get through
-        elapsed = 0
-        while True:
-            if super(Event, self).wait(1):
-                return True
-            elapsed += 1
-            if timeout is not None and elapsed >= timeout:
-                return False
+        return _spin_wait(super(Event, self).wait, timeout)
+
+
+class Thread(threading.Thread):
+    def join(self, timeout=None):
+        return _spin_wait(super(Thread, self).join, timeout)
+
+
+class Timer(threading._Timer):
+    def join(self, timeout=None):
+        return _spin_wait(super(Timer, self).join, timeout)
+
 
 class AsyncManager(AbstractAsyncManager):
     """Async manager for threads"""
     stop_timeout = defaultproperty(int, 1)
 
     def __init__(self):
-        # XXX: modify spawn/spawn_later to put threads in here,
-        # need some way to clean them up though (wrapper func?)
+        # _lock protects the _threads structure
+        self._lock = threading.Lock()
         self._threads = []
 
     def do_stop(self):
         """
-        print "stopping aysnc service"
-        if threading.current_thread() in self._threads:
-            threading.Thread(target=self.do_stop).start()
-
-        for t in self._threads:
-            t.join(self.stop_timeout)
-            # XXX: no api to kill OS threads
-        print "aysnc service stopped"
+            Beware! This function has different behavior than the gevent
+            async manager in the following respects:
+                - The stop timeout is used for joining each thread instead of
+                  for all of the threads collectively.
+                - If the threads do not successfully join within their timeout,
+                  they will not be killed since there is no safe way to do this.
         """
+        with self._lock:
+            reentrant_stop = threading.current_thread() in self._threads
+
+        if reentrant_stop:
+            t = Thread(target=self.do_stop)
+            t.daemon=True
+            t.start()
+            return t.join()
+
+        with self._lock:
+            for t in self._threads:
+                t.join(self.stop_timeout)
 
     def spawn(self, func, *args, **kwargs):
         """Spawn a greenlet under this service"""
-        t = threading.Thread(target=func, args=args, kwargs=kwargs)
+        t = Thread(target=func, args=args, kwargs=kwargs)
+        with self._lock:
+            self._threads.append(t)
         t.daemon=True
         t.start()
         return t
 
     def spawn_later(self, seconds, func, *args, **kwargs):
         """Spawn a greenlet in the future under this service"""
-        t = threading.Timer(target=func, args=args, kwargs=kwargs)
+        t = Timer(group=self, target=func, args=args, kwargs=kwargs)
+        with self._lock:
+            self._threads.append(t)
         t.daemon=True
         t.start()
         return t
