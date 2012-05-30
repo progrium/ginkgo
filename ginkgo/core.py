@@ -130,6 +130,10 @@ class BasicService(object):
         else:
             self.state("ready")
 
+    def serve_forever(self):
+        self.start()
+        self.state.wait("stopped")
+
     def pre_start(self):
         pass
 

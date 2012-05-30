@@ -172,8 +172,7 @@ class ControlInterface(object):
         print "Starting process with {}...".format(target)
         app = setup_process(target, daemonize)
         try:
-            app.start()
-            app.state.wait("stopped")
+            app.serve_forever()
         except KeyboardInterrupt:
             pass
         finally:
