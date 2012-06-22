@@ -56,6 +56,7 @@ User Guide
    user/intro
    user/install
    user/quickstart
+   user/manual
    user/advanced
 
 API Reference

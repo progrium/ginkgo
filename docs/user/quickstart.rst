@@ -18,307 +18,209 @@ The simplest service you could write looks something like this::
                 print "Hello World"
                 self.async.sleep(1)
 
-If you save this as *service.py* you can run it with the Ginkgo runner::
+If you save this as *hello.py* you can run it with the Ginkgo runner::
 
-    $ ginkgo service.HelloWorld
+    $ ginkgo hello.HelloWorld
 
 This should run your service, giving you a stream of "Hello World" lines.
 
 To stop your service, hit Ctrl+C.
 
-Using Configuration
--------------------
-Add the ``-h`` argument flag to our runner call::
-
-    $ ginkgo service.HelloWorld -h
-
-You'll see that the ``ginkgo`` runner command itself is very simple, but what's
-interesting is the last section::
-
-    config settings:
-      daemon         True or False whether to daemonize [False]
-      group          Change to a different group before running [None]
-      logconfig      Configuration of standard Python logger. Can be dict for basicConfig,
-                      dict with version key for dictConfig, or ini filepath for fileConfig. [None]
-      logfile        Path to primary log file. Ignored if logconfig is set. [/tmp/HelloWorld.log]
-      loglevel       Log level to use. Valid options: debug, info, warning, critical
-                      Ignored if logconfig is set. [debug]
-      pidfile        Path to pidfile to use when daemonizing [None]
-      rundir         Change to a directory before running [None]
-      umask          Change file mode creation mask before running [None]
-      user           Change to a different user before running [None]
-
-These are builtin settings and their default values. If you want to set any of
-these, you have to create a configuration file. But you can also create your
-own settings, so let's first change our Hello World service to be configurable::
-
-    from ginkgo import Service, Setting
-
-    class HelloWorld(Service):
-        message = Setting("message", default="Hello World",
-            help="Message to print out while running")
-
-        def do_start(self):
-            self.spawn(self.message_forever)
-
-        def message_forever(self):
-            while True:
-                print self.message
-                self.async.sleep(1)
-
-Running ``ginkgo service.HelloWorld -h`` again should now include your new
-setting. Let's create a configuration file now called *service.conf.py*::
-
-    import os
-    daemon = bool(os.environ.get("DAEMONIZE", False))
-    message = "Services all the way down."
-    service = "service.HelloWorld"
-
-A configuration file is simply a valid Python source file. In it, you define
-variables of any type using the setting name to set them.
-
-There's a special setting calling ``service`` that must be set, which is the
-class path target telling it what service to run. To run with this
-configuration, you just point ``ginkgo`` to the configuration file::
-
-    $ ginkgo service.conf.py
-
-And it should start and you should see "Services all the way down" repeating.
-
-You don't have direct access to set config settings from the ``ginkgo`` tool,
-but you can set values in your config to pull from the environment. For
-example, our configuration above lets us force our service to daemonize by
-setting the ``DAEMONIZE`` environment variable::
-
-    $ DAEMONIZE=yes ginkgo service.conf.py
-
-To stop the daemonized process, you can manually kill it or use the service
-management tool ``ginkgoctl``::
-
-    $ ginkgoctl service.conf.py stop
-
-Service Manager
----------------
-Running and stopping your service is easy with ``ginkgo``, but once you
-daemonize, it gets harder to interface with it. The ``ginkgoctl`` utility is
-for managing a daemonized service process.
-
-::
-
-    $ ginkgoctl -h
-    usage: ginkgoctl [-h] [-v] [-p PID]
-                     [target] {start,stop,restart,reload,status,log,logtail}
-
-    positional arguments:
-      target                service class path to use (modulename.ServiceClass) or
-                            configuration file path to use (/path/to/config.py)
-      {start,stop,restart,reload,status,log,logtail}
-
-    optional arguments:
-      -h, --help            show this help message and exit
-      -v, --version         show program's version number and exit
-      -p PID, --pid PID     pid or pidfile to use instead of target
-
-Like ``ginkgo`` it takes a target class path or configuration file. For
-``stop``, ``reload``, and ``status`` it can also just take a pid or pidfile
-with the ``pid`` argument.
-
-Using ``ginkgoctl`` will always force your service to daemonize
-when you use the ``start`` action.
-
-Service Model and Reloading
----------------------------
-Our service model lets you implement three main hooks on services:
-``do_start()``, ``do_stop()``, and ``do_reload()``. We've used ``do_start()``,
-which is run when a service is starting up. Not surprisingly, ``do_stop()`` is
-run when a service is shutting down. When is ``do_reload()`` run? Well,
-whenever ``reload()`` is called. :)
-
-Services are designed to contain other services like object composition. Though
-after adding services to a service, when you call any of the service interface
-methods, they will propogate down to child services. This is done in the actual
-``start()``, ``stop()``, and ``reload()`` methods. The ``do_`` methods are for
-you to implement specifically what happens for *that* service to
-start/stop/reload. 
-
-So when is ``reload()`` called? Okay, I'll skip ahead and just say it gets
-called when the process receives a SIGHUP signal. As you may have guessed, for
-convenience, this is exposed in ``ginkgoctl`` with the ``reload`` action.
-
-The semantics of ``reload`` are up to you and your application or service.
-Though one thing happens automatically when a process gets a reload signal:
-configuration is reloaded. 
-
-One use of ``do_reload()`` is to take new configuration and perform any
-operations to apply that configuration to your running service. However, as
-long as you access a configuration setting by reference via the ``Setting``
-descriptor, you may not need to do anything -- the value will just update in
-real-time.
-
-Let's see this in action. We'll change our Hello World service to have a
-``rate_per_minute`` setting that will be used for our delay between messages::
-
-    from ginkgo import Service, Setting
-
-    class HelloWorld(Service):
-        message = Setting("message", default="Hello World",
-            help="Message to print out while running")
-
-        rate = Setting("rate_per_minute", default=60,
-            help="Rate at which to emit message")
-
-        def do_start(self):
-            self.spawn(self.message_forever)
-
-        def message_forever(self):
-            while True:
-                print self.message
-                self.async.sleep(60.0 / self.rate)
-
-The default is 60 messages a minute, which results in the same behavior as
-before. So let's change our configuration to use a different rate::
-
-    import os
-    daemon = bool(os.environ.get("DAEMONIZE", False))
-    message = "Services all the way down."
-    rate_per_minute = 180
-    service = "service.HelloWorld"
-
-Use ``ginkgo`` to start the service::
-
-    $ ginkgo service.conf.py
-
-As you can see, it's emitting messages a bit faster now. About 3 per second.
-Now while that's running, open the configuration file and change
-rate_per_minute to some other value. Then, in another terminal, change to that
-directory and reload::
-
-    $ ginkgoctl service.conf.py reload
-
-Look back at your running service to see that it's now using the new emit rate.
-
-Using Logging
--------------
-Logging with Ginkgo is based on standard Python logging. We make sure it works
-with daemonization and provide Ginkgo-friendly ways to configure it with good
-defaults. We even support reloading logging configuration.
-
-Out of the box, you can just start logging. We encourage you to use the common
-convention of module level loggers, but obviously there is a lot of freedom in
-how you use Python logging. Let's add some logging to our Hello World,
-including changing our print call to a logger call as it's better practice::
-
-    import logging
-    from ginkgo import Service, Setting
-
-    logger = logging.getLogger(__name__)
-
-    class HelloWorld(Service):
-        message = Setting("message", default="Hello World",
-            help="Message to print out while running")
-
-        rate = Setting("rate_per_minute", default=60,
-            help="Rate at which to emit message")
-
-        def do_start(self):
-            logger.info("Starting up!")
-            self.spawn(self.message_forever)
-
-        def do_stop(self):
-            logger.info("Goodbye.")
-
-        def message_forever(self):
-            while True:
-                logger.info(self.message)
-                self.async.sleep(60.0 / self.rate)
-
-Let's run it with our existing configuration for a bit and then stop::
-
-    $ ginkgo service.conf.py
-    Starting process with service.conf.py...
-    2012-04-28 17:21:32,608    INFO service: Starting up!
-    2012-04-28 17:21:32,608    INFO service: Services all the way down.
-    2012-04-28 17:21:33,609    INFO service: Services all the way down.
-    2012-04-28 17:21:34,610    INFO service: Services all the way down.
-    2012-04-28 17:21:35,714    INFO service: Goodbye.
-    2012-04-28 17:21:35,714    INFO runner: Stopping.
-
-Running ``-h`` will show you that the default logfile is going to be
-*/tmp/HelloWorld.log*, which logging will create and append to if you
-daemonize.
-
-To configure logging, Ginkgo exposes two settings for simple case
-configuration: ``logfile`` and ``loglevel``. If that's not enough, you can use
-``logconfig``, which will override any value for ``logfile`` and ``loglevel``.
-
-Using ``logconfig`` you can configure logging as expressed by
-``logging.basicConfig``. By default, if you set ``logconfig`` to a dictionary,
-it will apply those keyword arguments to ``logging.basicConfig``.  You can
-learn more about ``logging.basicConfig``
-`here <http://docs.python.org/library/logging.html#logging.basicConfig>`_.
-
-For advanced configuration, we also let you use ``logging.config`` from the
-``logconfig`` setting. If ``logconfig`` is a dictionary with a ``version`` key,
-we will load it into ``logging.config.dictConfig``. If ``logconfig`` is a path
-to a file, we load it into ``logging.config.fileConfig``.  Both of these are
-ways to define a configuration structure that lets you create just about any
-logging configuration. Read more about ``logging.config``
-`here <http://docs.python.org/library/logging.config.html#module-logging.config>`_.
-
-
 Writing a Server
 ----------------
+A service is not a server until you make it one. Using gevent, this is
+easy using the StreamServer service to do the work of running a TCP
+server::
 
-TODO
+    from ginkgo import Service
+    from ginkgo.async.gevent import StreamServer
 
-Here's what writing a simple server application looks like:
-
-::
-
-    # server.py
-
-    import random
-
-    from ginkgo import Service, Setting
-    from ginkgo.async import gevent
-
-    class NumberServer(Service):
-        """TCP server that emits random numbers"""
-
-        address = Setting("numbers.bind", default=('0.0.0.0', 7776))
-        emit_rate = Setting("numbers.rate_per_min", default=60)
-
+    class HelloWorldServer(Service):
         def __init__(self):
-            self.add_service(
-                    gevent.StreamServer(self.address, self.handle))
+            self.server = StreamServer(('0.0.0.0', 7000), self.handle)
+            self.add_service(self.server)
 
         def handle(self, socket, address):
             while True:
-                try:
-                    number = random.randint(0, 10)
-                    socket.send("{}\n".format(number))
-                    self.async.sleep(60 / self.emit_rate)
-                except IOError:
-                    break # Connection lost
+                socket.send("Hello World\n")
+                self.async.sleep(1)
 
+Save this as *quickstart.py* and run with::
 
+    $ ginkgo quickstart.HelloWorldServer
+
+It will start listening on port 7000. We can connect with netcat::
+
+    $ nc localhost 7000
+
+Again we see a stream of "Hello World" lines, but this time being sent over
+TCP. You can open more netcat connections to see it running concurrently
+just fine.
+
+Notice our HelloWorldServer implementation is *composed* of a generic
+StreamServer and doesn't need to implement anything else other than a
+handler for that StreamServer.
 
 Writing a Client
 ----------------
+A client that maintains a persistent connection (or maybe pool of
+connections) to a server also makes sense to be modeled as a Service.
+Let's add a client to our HelloWorldServer in our quickstart module. Now
+it looks like this::
 
-TODO
+    from ginkgo import Service
+    from ginkgo.async.gevent import StreamServer
+    from ginkgo.async.gevent import StreamClient
 
-Composing Services
-------------------
+    class HelloWorldServer(Service):
+        def __init__(self):
+            self.server = StreamServer(('0.0.0.0', 7000), self.handle)
+            self.add_service(self.server)
 
-TODO
+        def handle(self, socket, address):
+            while True:
+                socket.send("Hello World\n")
+                self.async.sleep(1)
 
-Async Programming
------------------
+    class HelloWorldClient(Service):
+        def __init__(self):
+            self.client = StreamClient(('0.0.0.0', 7000), self.handle)
 
-TODO
+        def handle(self, socket):
+            fileobj = socket.makefile()
+            while True:
+                print fileobj.readline().strip()
+
+Save and run the server first with::
+
+    $ ginkgo quickstart.HelloWorldServer
+
+Let that run, switch to a new terminal and run the client with::
+
+    $ ginkgo quickstart.HelloWorldClient
+
+As you'd expect, the client connects to the server and prints all the
+"Hello World" lines it receives.
+
+Service Composition
+-------------------
+We've already been doing service composition by using generic TCP server
+and client services to build our HelloWorld services. These primitives
+are services themselves, just like the ones you've been making. So you
+can compose and aggregate your own services the same way.
+
+Let's combine our client and server by add a HelloWorld service in
+our quickstart module. It now looks like this::
+
+    from ginkgo import Service
+    from ginkgo.async.gevent import StreamServer
+    from ginkgo.async.gevent import StreamClient
+
+    class HelloWorldServer(Service):
+        def __init__(self):
+            self.server = StreamServer(('0.0.0.0', 7000), self.handle)
+            self.add_service(self.server)
+
+        def handle(self, socket, address):
+            while True:
+                socket.send("Hello World\n")
+                self.async.sleep(1)
+
+    class HelloWorldClient(Service):
+        def __init__(self):
+            self.client = StreamClient(('0.0.0.0', 7000), self.handle)
+
+        def handle(self, socket):
+            fileobj = socket.makefile()
+            while True:
+                print fileobj.readline().strip()
+
+    class HelloWorld(Service):
+        def __init__(self):
+            self.add_service(HelloWorldServer())
+            self.add_service(HelloWorldClient())
+
+Save and we can run our new aggregate service::
+
+    $ ginkgo quickstart.HelloWorld
+
+Now the client and server are both running, giving us effectively what
+we came in with.
 
 Using a Web Framework
 ---------------------
+Adding a web server our HelloWorld service is quite trivial. Here we use
+gevent's WSGI server implementation::
 
+    from ginkgo import Service
+    from ginkgo.async.gevent import StreamServer
+    from ginkgo.async.gevent import StreamClient
+    from ginkgo.async.gevent import WSGIServer
+
+    class HelloWorldServer(Service):
+        def __init__(self):
+            self.server = StreamServer(('0.0.0.0', 7000), self.handle)
+            self.add_service(self.server)
+
+        def handle(self, socket, address):
+            while True:
+                socket.send("Hello World\n")
+                self.async.sleep(1)
+
+    class HelloWorldClient(Service):
+        def __init__(self):
+            self.client = StreamClient(('0.0.0.0', 7000), self.handle)
+
+        def handle(self, socket):
+            fileobj = socket.makefile()
+            while True:
+                print fileobj.readline().strip()
+
+    class HelloWorldWebServer(Service):
+        def __init__(self):
+            self.server = WSGIServer(('0.0.0.0', 8000), self.handle)
+            self.add_service(self.server)
+
+        def handle(self, environ, start_response):
+            start_response('200 OK', [('Content-Type', 'text/html')])
+            return ["<strong>Hello World</strong>"]
+
+    class HelloWorld(Service):
+        def __init__(self):
+            self.add_service(HelloWorldServer())
+            self.add_service(HelloWorldClient())
+            self.add_service(HelloWorldWebServer())
+
+Running `quickstart.HelloWorld` with Ginkgo will run a server, a client,
+and a web server. The client will be printing our stream of "Hello
+World" lines. Our server is also available to be connected to via
+netcat. And we can also connect to our web server with curl::
+
+    $ curl http://localhost:8000
+
+And we see a strong declaration of "Hello World". 
+
+In that example our web server implements a small WSGI application, but
+you can also use any WSGI compatible web framework. Here is an example
+of the Flask Hello World runnable with Ginkgo::
+
+    from flask import Flask
+    from ginkgo.async.gevent import WSGIServer
+
+    app = Flask(__name__)
+
+    @app.route("/")
+    def hello():
+        return "Hello World!"
+
+    class FlaskServer(WSGIServer):
+        def __init__(self):
+            WSGIServer.__init__(self, ('0.0.0.0', 8000), app)
+
+
+Using Configuration
+-------------------
 TODO
+
+
+
