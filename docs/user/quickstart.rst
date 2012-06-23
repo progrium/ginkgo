@@ -37,8 +37,7 @@ server::
 
     class HelloWorldServer(Service):
         def __init__(self):
-            self.server = StreamServer(('0.0.0.0', 7000), self.handle)
-            self.add_service(self.server)
+            self.add_service(StreamServer(('0.0.0.0', 7000), self.handle))
 
         def handle(self, socket, address):
             while True:
@@ -74,8 +73,7 @@ it looks like this::
 
     class HelloWorldServer(Service):
         def __init__(self):
-            self.server = StreamServer(('0.0.0.0', 7000), self.handle)
-            self.add_service(self.server)
+            self.add_service(StreamServer(('0.0.0.0', 7000), self.handle))
 
         def handle(self, socket, address):
             while True:
@@ -84,7 +82,7 @@ it looks like this::
 
     class HelloWorldClient(Service):
         def __init__(self):
-            self.client = StreamClient(('0.0.0.0', 7000), self.handle)
+            self.add_service(StreamClient(('0.0.0.0', 7000), self.handle))
 
         def handle(self, socket):
             fileobj = socket.makefile()
@@ -118,8 +116,7 @@ our quickstart module. It now looks like this::
 
     class HelloWorldServer(Service):
         def __init__(self):
-            self.server = StreamServer(('0.0.0.0', 7000), self.handle)
-            self.add_service(self.server)
+            self.add_service(StreamServer(('0.0.0.0', 7000), self.handle))
 
         def handle(self, socket, address):
             while True:
@@ -128,7 +125,7 @@ our quickstart module. It now looks like this::
 
     class HelloWorldClient(Service):
         def __init__(self):
-            self.client = StreamClient(('0.0.0.0', 7000), self.handle)
+            self.add_service(StreamClient(('0.0.0.0', 7000), self.handle))
 
         def handle(self, socket):
             fileobj = socket.makefile()
@@ -159,8 +156,7 @@ gevent's WSGI server implementation::
 
     class HelloWorldServer(Service):
         def __init__(self):
-            self.server = StreamServer(('0.0.0.0', 7000), self.handle)
-            self.add_service(self.server)
+            self.add_service(StreamServer(('0.0.0.0', 7000), self.handle))
 
         def handle(self, socket, address):
             while True:
@@ -169,7 +165,7 @@ gevent's WSGI server implementation::
 
     class HelloWorldClient(Service):
         def __init__(self):
-            self.client = StreamClient(('0.0.0.0', 7000), self.handle)
+            self.add_service(StreamClient(('0.0.0.0', 7000), self.handle))
 
         def handle(self, socket):
             fileobj = socket.makefile()
@@ -178,8 +174,7 @@ gevent's WSGI server implementation::
 
     class HelloWorldWebServer(Service):
         def __init__(self):
-            self.server = WSGIServer(('0.0.0.0', 8000), self.handle)
-            self.add_service(self.server)
+            self.add_service(WSGIServer(('0.0.0.0', 8000), self.handle))
 
         def handle(self, environ, start_response):
             start_response('200 OK', [('Content-Type', 'text/html')])
@@ -198,11 +193,11 @@ netcat. And we can also connect to our web server with curl::
 
     $ curl http://localhost:8000
 
-And we see a strong declaration of "Hello World". 
+And we see a strong declaration of "Hello World".
 
 In that example our web server implements a small WSGI application, but
 you can also use any WSGI compatible web framework. Here is an example
-of the Flask Hello World runnable with Ginkgo::
+of the Flask Hello World runnable with Ginkgo using `AppServer`::
 
     from flask import Flask
     from ginkgo.async.gevent import WSGIServer
@@ -213,10 +208,11 @@ of the Flask Hello World runnable with Ginkgo::
     def hello():
         return "Hello World!"
 
-    class FlaskServer(WSGIServer):
-        def __init__(self):
-            WSGIServer.__init__(self, ('0.0.0.0', 8000), app)
+    def AppServer():
+        return WSGIServer(('0.0.0.0', 8000), app)
 
+Notice AppServer a callable that returns a service, in this case a
+pre-configured WSGIServer.
 
 Using Configuration
 -------------------
