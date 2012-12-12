@@ -191,12 +191,6 @@ class BasicService(object):
             # already started, just move on
             pass
 
-        # This is done to recursively get services to wait on stopped.
-        # Services based on BasicService will not wait because they
-        # have no async manager and assume no event loop or threads.
-        for child in self._children:
-            child.serve_forever()
-
         self.state.wait("stopped")
 
     def __enter__(self):
