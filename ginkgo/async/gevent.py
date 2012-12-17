@@ -32,7 +32,7 @@ from ..util import defaultproperty, ObjectWrapper
 from ..async import AbstractAsyncManager
 
 class AsyncManager(AbstractAsyncManager):
-    """Starting with just gevent"""
+    """Async primitives from gevent"""
     stop_timeout = defaultproperty(int, 1)
 
     def __init__(self):
@@ -68,6 +68,12 @@ class AsyncManager(AbstractAsyncManager):
 
     def lock(self, *args, **kwargs):
         return gevent.coros.Semaphore(*args, **kwargs)
+
+    def signal(self, *args, **kwargs):
+        gevent.signal(*args, **kwargs)
+
+    def init(self):
+        gevent.reinit()
 
 
 class ServerWrapper(Service):
