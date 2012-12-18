@@ -9,7 +9,6 @@ from ginkgo import Setting
 
 
 delay = 1
-#logconfig = {"filename": "/tmp/MyService.log", "level": logging.DEBUG}
 
 class flask:
     debug = False
@@ -41,4 +40,5 @@ class MyService(_Service):
             self.log.info("hello")
             self.async.sleep(self.delay)
 
+async = 'ginkgo.async.gevent'
 service = MyService

@@ -18,6 +18,7 @@ import runpy
 
 from .util import AbstractStateMachine
 from .util import defaultproperty
+from . import Setting
 
 def require_ready(func):
     """ Decorator that blocks the call until the service is ready """
@@ -101,8 +102,8 @@ class BasicService(object):
     def add_service(self, service):
         """Add a child service to this service
 
-        The service added will be started when this service starts, before 
-        its :meth:`_start` method is called. It will also be stopped when this 
+        The service added will be started when this service starts, before
+        its :meth:`_start` method is called. It will also be stopped when this
         service stops, before its :meth:`_stop` method is called.
 
         """
@@ -202,16 +203,34 @@ class BasicService(object):
 
 
 class Service(BasicService):
-    async = 'ginkgo.async.gevent'
+    async_available = ["ginkgo.async." + m for m in ("gevent", "threading",
+                                                     "eventlet")]
+    async = Setting("async", default="ginkgo.async.threading", help="""\
+        The async reactor to use. Available choices:
+            ginkgo.async.gevent
+            ginkgo.async.threading
+            ginkgo.async.eventlet
+        """)
 
     def pre_init(self):
         try:
             mod = runpy.run_module(self.async)
             self.async = mod['AsyncManager']()
             self.add_service(self.async)
-        except NotImplementedError: #(ImportError, KeyError):
+        except (NotImplementedError, ImportError) as e:
+            if self.async not in self.async_available:
+                helptext = ("Please select a valid async module: \n\t"
+                            + "\n\t".join(self.async_available))
+
+            elif self.async.endswith("gevent"):
+                helptext = ("Please make sure gevent is installed or use "
+                            "a different async manager.")
+            else:
+                helptext = ""
+
             raise RuntimeError(
-                "Unable to load async manager from {}".format(self.async))
+                "Unable to load async manager from {}.\n{}".format(self.async,
+                                                                  helptext))
 
     def spawn(self, *args, **kwargs):
         return self.async.spawn(*args, **kwargs)

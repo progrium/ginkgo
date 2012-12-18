@@ -1,2 +1,1 @@
-gevent>=0.13
 nose

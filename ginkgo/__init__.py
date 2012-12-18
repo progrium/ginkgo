@@ -22,14 +22,7 @@ case building Ginkgo services::
 """
 import sys
 
-from .core import Service
 from .config import Config
-
-__author__ = "Jeff Lindsay <jeff.lindsay@twilio.com>"
-__license__ = "MIT"
-__version__ = ".".join(map(str, (0, 5, 0)))
-
-__all__ = ["Service", "Setting", "process", "settings"]
 
 process = None
 settings = Config()
@@ -38,3 +31,9 @@ Setting = lambda *args, **kwargs: settings.setting(*args, **kwargs)
 # Set the singleton location for Config global context
 Config.singleton_attr = (sys.modules[__name__], 'settings')
 
+from .core import Service
+
+__all__ = ["Service", "Setting", "process", "settings"]
+__author__ = "Jeff Lindsay <jeff.lindsay@twilio.com>"
+__license__ = "MIT"
+__version__ = ".".join(map(str, (0, 6, 0)))

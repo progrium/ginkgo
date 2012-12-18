@@ -15,6 +15,7 @@ class definition::
         async = "path.to.different.module"
 
 """
+import signal
 from ..core import BasicService
 
 class AbstractAsyncManager(BasicService):
@@ -35,3 +36,9 @@ class AbstractAsyncManager(BasicService):
 
     def lock(self, *args, **kwargs):
         raise NotImplementedError()
+
+    def signal(self, *args, **kwargs):
+        return signal.signal(*args, **kwargs)
+
+    def init(self):
+        pass
