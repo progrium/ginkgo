@@ -205,7 +205,7 @@ class BasicService(object):
 class Service(BasicService):
     async_available = ["ginkgo.async." + m for m in ("gevent", "threading",
                                                      "eventlet")]
-    async = Setting("async", default="ginkgo.async.gevent", help="""\
+    async = Setting("async", default="ginkgo.async.threading", help="""\
         The async reactor to use. Available choices:
             ginkgo.async.gevent
             ginkgo.async.threading

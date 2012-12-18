@@ -39,6 +39,8 @@ class AsyncManager(AbstractAsyncManager):
 
     def __init__(self):
         # _lock protects the _threads structure
+        print ("The ginkgo.async.threading manager should not be used in "
+               "production environments due to the known limitations of the GIL")
         self._lock = threading.Lock()
         self._threads = []
 
