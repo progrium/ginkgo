@@ -1,1 +1,0 @@
-async = 'ginkgo.async.greenlet'
