@@ -12,7 +12,6 @@ setup(
     description='Lightweight service framework',
     packages=find_packages(),
     setup_requires=['nose'],
-    install_requires=['gevent>=0.13'],
     tests_require=['nose'],
     test_suite='nose.collector',
     data_files=[],

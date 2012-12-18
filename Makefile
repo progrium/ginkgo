@@ -11,7 +11,7 @@ install:
 	python setup.py install
 
 coverage:
-	nosetests --with-coverage --cover-package=ginkgo
+	nosetests tests --with-coverage --cover-package=ginkgo
 
 build_pages:
 	export branch=$$(git status | grep 'On branch' | cut -f 4 -d ' '); \
